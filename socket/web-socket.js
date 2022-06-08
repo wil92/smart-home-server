@@ -33,7 +33,10 @@ const ws = {
     setInterval(() => {
       wss.clients.forEach((ws) => {
 
-        if (!ws.isAlive) return ws.terminate();
+        if (!ws.isAlive) {
+          data.lights.delete(ws.lid);
+          return ws.terminate();
+        }
 
         ws.isAlive = false;
         ws.ping(null, false, true);
