@@ -1,9 +1,10 @@
 const express = require('express');
-const data = require("../data");
 const jwt = require('jsonwebtoken');
-const {queryToStr, createCode, auth2Response} = require("../utils");
+const data = require("../data");
+const {queryToStr, createCode, auth2Response, CODE_TOKEN_TYPE, REFRESH_TOKEN_TYPE} = require("../utils");
+const env = require('../environments');
+
 const router = express.Router();
-const env = require('../environments')
 
 router.get('/', (req, res, next) => {
   res.render('login', {title: 'LogIn', data, query: queryToStr(req.query), error: null});
@@ -46,7 +47,11 @@ router.post('/token', (req, res) => {
   if (grant_type === 'authorization_code' || grant_type === 'refresh_token') {
     const token = grant_type === 'authorization_code' ? code : refresh_token;
     try {
-      jwt.verify(token, env.key);
+      const payload = jwt.verify(token, env.key);
+      if ((grant_type === 'authorization_code' && payload.type !== CODE_TOKEN_TYPE) ||
+        (grant_type === 'refresh_token' && payload.type !== REFRESH_TOKEN_TYPE)) {
+        throw new Error('Invalid token');
+      }
       return res.send(auth2Response(grant_type === 'authorization_code'));
     } catch (e) {
       console.error(e);

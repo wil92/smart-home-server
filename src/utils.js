@@ -1,6 +1,10 @@
 const jwt = require('jsonwebtoken');
 const env = require('./environments');
 
+const CODE_TOKEN_TYPE = 'code';
+const REFRESH_TOKEN_TYPE = 'refresh_token';
+const ACCESS_TOKEN_TYPE = 'access_token';
+
 /**
  * @param query {object}
  * @returns {string}
@@ -16,7 +20,7 @@ function queryToStr(query) {
 }
 
 function createCode() {
-  return createToken();
+  return createToken({type: CODE_TOKEN_TYPE});
 }
 
 function auth2Response(withRefreshToken = true) {
@@ -32,15 +36,25 @@ function auth2Response(withRefreshToken = true) {
 }
 
 function createRefreshToken() {
-  return createToken('2y');
+  return createToken({type: REFRESH_TOKEN_TYPE}, '2y');
 }
 
 function createAccessToken() {
-  return createToken('2h');
+  return createToken({type: ACCESS_TOKEN_TYPE}, '2h');
 }
 
-function createToken(expiresIn = '20m') {
-  return jwt.sign({}, env.key, {expiresIn});
+function createToken(payload = {}, expiresIn = '20m') {
+  return jwt.sign(payload, env.key, {expiresIn});
 }
 
-module.exports = {queryToStr, createCode, auth2Response};
+module.exports = {
+  queryToStr,
+  createCode,
+  auth2Response,
+  createRefreshToken,
+  createAccessToken,
+  createCode,
+  CODE_TOKEN_TYPE,
+  REFRESH_TOKEN_TYPE,
+  ACCESS_TOKEN_TYPE
+};
