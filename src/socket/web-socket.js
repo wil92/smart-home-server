@@ -1,6 +1,6 @@
 const WebSocket = require('ws');
 
-const data = require('../logic/data');
+const data = require('../data');
 
 let wss;
 

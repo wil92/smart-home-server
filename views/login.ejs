@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+  </head>
+  <body>
+    <h1><%= title %></h1>
+    <% if (error) { %>
+    <h4><%= error %></h4>
+    <% } %>
+    <form action="/auth?<%= query %>" method="post">
+        <label>
+          username
+          <input type="text" name="username">
+        </label>
+        <label>
+          password
+          <input type="password" name="password">
+        </label>
+        <button type="submit">LogIn</button>
+    </form>
+  </body>
+</html>

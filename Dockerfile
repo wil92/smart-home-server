@@ -7,10 +7,10 @@ RUN npm install
 
 COPY bin ./bin
 COPY public ./public
-COPY socket ./socket
-COPY routes ./routes
+COPY src/socket ./socket
+COPY src/routes ./routes
 COPY views ./views
-COPY logic ./logic
+COPY src ./logic
 COPY app.js ./
 
 CMD ["node", "bin/www"]

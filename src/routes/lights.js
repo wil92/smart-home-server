@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const webSocket = require('../socket/web-socket');
 
-const data = require('../logic/data');
+const data = require('../data');
 
 router.get('/', (req, res, next) => {
   res.send(Array.from(data.lights).map(([k, v]) => v));
