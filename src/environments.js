@@ -5,6 +5,7 @@ const env = {
   auth2ClientId: process.env.AUTH2_CLIENT_ID || '5IRJ5rSNSqqqPT2',
   auth2ClientSecret: process.env.AUTH2_CLIENT_SECRET || '6RP64F4sHkZ7FTcCQoZZ6S5Ot',
   auth2redirectUri: process.env.AUTH2_REDIRECT_URI || 'REDIRECT_URI',
+  googleUserId: process.env.GOOGLE_USER_ID || 'cfrombBECh1bi9N',
 };
 
 module.exports = env;

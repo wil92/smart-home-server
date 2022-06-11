@@ -6,9 +6,8 @@ const cookieSession = require('cookie-session');
 const logger = require('morgan');
 const sassMiddleware = require('node-sass-middleware');
 
-const isLogin = require('./src/middlewares/is-login');
 const indexRouter = require('./src/routes/index');
-const usersRouter = require('./src/routes/lights');
+const apiRouter = require('./src/routes/api');
 const authRouter = require('./src/routes/auth');
 
 const env = require('./src/environments');
@@ -27,7 +26,6 @@ app.use(cookieSession({
   keys: [env.key],
   maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }));
-app.use(isLogin);
 app.use(sassMiddleware({
   src: path.join(__dirname, 'public'),
   dest: path.join(__dirname, 'public'),
@@ -37,8 +35,8 @@ app.use(sassMiddleware({
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
-app.use('/lights', usersRouter);
 app.use('/auth', authRouter);
+app.use('/api', apiRouter);
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
