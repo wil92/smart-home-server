@@ -11,4 +11,8 @@ router.get('/', function (req, res, next) {
   res.render('index', {title: 'Express', data});
 });
 
+router.get('/policy', function (req, res, next) {
+  res.render('policy.ejs', {title: 'Policy'});
+});
+
 module.exports = router;
