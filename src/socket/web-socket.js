@@ -45,15 +45,17 @@ const ws = {
   },
 
   sendMessage: (id, message) => {
-    let wsClient;
     wss.clients.forEach(ws => {
       if (ws.lid === id) {
-        wsClient = ws;
+        ws.send(JSON.stringify(message));
       }
     });
-    if (wsClient) {
-      wsClient.send(JSON.stringify(message));
-    }
+  },
+
+  broadcastMessage(message) {
+    wss.clients.forEach(ws => {
+      ws.send(JSON.stringify(message));
+    });
   }
 };
 

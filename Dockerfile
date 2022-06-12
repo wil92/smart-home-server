@@ -12,5 +12,6 @@ COPY src/routes ./routes
 COPY views ./views
 COPY src ./logic
 COPY app.js ./
+COPY .env ./
 
 CMD ["node", "bin/www"]
