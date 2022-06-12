@@ -1,5 +1,9 @@
 #!/usr/bin/env node
 
+if (process.env.NODE_ENV !== 'test') {
+  require('dotenv').config();
+}
+
 /**
  * Module dependencies.
  */
@@ -8,10 +12,6 @@ const app = require('../app');
 const webSocket = require('../src/socket/web-socket');
 const debug = require('debug')('smart-home-server:server');
 const http = require('http');
-
-if (process.env.NODE_ENV !== 'test') {
-  require('dotenv').config();
-}
 
 /**
  * Get port from environment and store in Express.
