@@ -17,13 +17,13 @@ jobs:
       - name: create .env file
         run: |
           echo "PORT=${{ secrets.PORT }}" > .env
-          echo "KEY=${{ secrets.PORT }}" >> .env
-          echo "USERNAME=${{ secrets.PORT }}" >> .env
-          echo "PASSWORD=${{ secrets.PORT }}" >> .env
-          echo "AUTH2_CLIENT_ID=${{ secrets.PORT }}" >> .env
-          echo "AUTH2_CLIENT_SECRET=${{ secrets.PORT }}" >> .env
-          echo "AUTH2_REDIRECT_URI=${{ secrets.PORT }}" >> .env
-          echo "GOOGLE_USER_ID=${{ secrets.PORT }}" >> .env
+          echo "KEY=${{ secrets.KEY }}" >> .env
+          echo "USERNAME=${{ secrets.USERNAME }}" >> .env
+          echo "PASSWORD=${{ secrets.PASSWORD }}" >> .env
+          echo "AUTH2_CLIENT_ID=${{ secrets.AUTH2_CLIENT_ID }}" >> .env
+          echo "AUTH2_CLIENT_SECRET=${{ secrets.AUTH2_CLIENT_SECRET }}" >> .env
+          echo "AUTH2_REDIRECT_URI=${{ secrets.AUTH2_REDIRECT_URI }}" >> .env
+          echo "GOOGLE_USER_ID=${{ secrets.GOOGLE_USER_ID }}" >> .env
 
       - name: Copy project to the hosting
         uses: easingthemes/ssh-deploy@v2.1.5
