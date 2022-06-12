@@ -14,6 +14,8 @@ function validateToken(req, res, next) {
     } catch (e) {
       console.error(e)
     }
+  } else if (req.session['isLogin']) {
+    return next();
   }
   res.status(401);
   res.send({error: 'Invalid access token'});
