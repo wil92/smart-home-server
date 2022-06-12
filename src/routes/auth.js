@@ -24,6 +24,7 @@ router.post('/', (req, res, next) => {
   if (redirect_uri) {
     if (client_id === env.auth2ClientId && redirect_uri === env.auth2redirectUri) {
       const code = createCode();
+      req.session['isLogin'] = true;
       return res.redirect(`${redirect_uri}?${queryToStr({code, state})}`);
     } else {
       res.render('login', {
@@ -34,9 +35,9 @@ router.post('/', (req, res, next) => {
       });
     }
   } else {
+    req.session['isLogin'] = true;
     res.redirect('/');
   }
-  req.session['isLogin'] = true;
 });
 
 router.post('/token', (req, res) => {
