@@ -42,6 +42,9 @@ router.post('/', (req, res, next) => {
 
 router.post('/token', (req, res) => {
   const {client_id, client_secret, grant_type, code, refresh_token} = req.query;
+  console.log(req.query);
+  console.log(req.params);
+  console.log(req.headers)
   if (client_id !== env.auth2ClientId || client_secret !== env.auth2ClientSecret) {
     return sendError(res);
   }
