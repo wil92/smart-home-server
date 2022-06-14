@@ -36,16 +36,29 @@ describe('Functions test', () => {
     jwt.verify(urlObj.query.code, env.key);
 
     // Get refresh token with the authorization code
-    const res2 = await request(app).post(`/auth/token?client_id=GOOGLE_CLIENT_ID&client_secret=GOOGLE_CLIENT_SECRET&grant_type=authorization_code&code=${encodeURI(urlObj.query.code)}&redirect_uri=REDIRECT_URI`)
-      .expect(200);
+    const res2 = await request(app).post('/auth/token')
+      .expect(200)
+      .send({
+        client_id: 'GOOGLE_CLIENT_ID',
+        client_secret: 'GOOGLE_CLIENT_SECRET',
+        grant_type: 'authorization_code',
+        code: encodeURI(urlObj.query.code),
+        redirect_uri: 'REDIRECT_URI'
+      });
     expect(res2.body['token_type']).toEqual('Bearer');
     expect(res2.body['expires_in']).toEqual(7200);// 2h
     jwt.verify(res2.body['access_token'], env.key);
     jwt.verify(res2.body['refresh_token'], env.key);
 
     // Get refresh token with the authorization code
-    const res3 = await request(app).post(`/auth/token?client_id=GOOGLE_CLIENT_ID&client_secret=GOOGLE_CLIENT_SECRET&grant_type=refresh_token&refresh_token=${encodeURI(res2.body['refresh_token'])}`)
-      .expect(200);
+    const res3 = await request(app).post('/auth/token')
+      .expect(200)
+      .send({
+        client_id: 'GOOGLE_CLIENT_ID',
+        client_secret: 'GOOGLE_CLIENT_SECRET',
+        grant_type: 'refresh_token',
+        refresh_token: encodeURI(res2.body['refresh_token'])
+      });
     expect(res3.body['token_type']).toEqual('Bearer');
     expect(res3.body['expires_in']).toEqual(7200);// 2h
     jwt.verify(res3.body['access_token'], env.key);
