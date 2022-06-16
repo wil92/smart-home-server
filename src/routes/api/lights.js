@@ -41,7 +41,7 @@ function handleAction(action) {
     case 'action.devices.QUERY':
       return queryAction(action);
     case 'action.devices.EXECUTE':
-      break;
+      return executeAction(action);
     case 'action.devices.DISCONNECT':
       break;
     default:
@@ -86,21 +86,43 @@ function queryAction(action) {
 }
 
 function executeAction(action) {
-  const error = [];
+  const payload = {commands: []}
+  const errors = [];
   action.payload.commands.forEach(c => {
-    c.devices.forEach(d => {
-      if (data.lights.has(d.id)) {
-        const currentDevice = data.lights.get(d.id);
-
+    c.execution.forEach(exe => {
+      let commandRes;
+      if (exe.command === 'action.devices.commands.OnOff') {
+        commandRes = {ids: [], status: "SUCCESS", states: {on: exe.params.on, online: true}};
       } else {
-        error.push(d);
+        // toDo guille 16.06.22: not handle command
+        return;
       }
-    })
+
+      c.devices.forEach(d => {
+        if (data.lights.has(d.id)) {
+          const currentDevice = data.lights.get(d.id);
+          // toDo guille 16.06.22: execute action here
+          commandRes.ids.push(d.id);
+        } else {
+          errors.push(d);
+        }
+      });
+
+      payload.commands.push(commandRes);
+    });
   });
+
+  if (errors.length > 0) {
+    const commandRes = {ids: [], status: 'OFFLINE', states: {online: false}};
+    errors.forEach(e => commandRes.ids.push(e.id));
+    payload.commands.push(commandRes);
+  }
+
+  return payload;
 }
 
 function traitsByType(type) {
-  switch (type){
+  switch (type) {
     case 'action.devices.types.OUTLET':
       return ['action.devices.traits.OnOff'];
     default:
