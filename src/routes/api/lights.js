@@ -39,7 +39,7 @@ function handleAction(action) {
     case 'action.devices.SYNC':
       return syncAction();
     case 'action.devices.QUERY':
-      break;
+      return queryAction(action);
     case 'action.devices.EXECUTE':
       break;
     case 'action.devices.DISCONNECT':
@@ -53,18 +53,59 @@ function syncAction() {
   const lights = Array.from(data.lights);
   return {
     agentUserId: env.googleUserId,
-    devices: lights.map(l => ({
-      id: '',
-      type: '',
-      traits: [
-        'action.devices.traits.OnOff'
-      ],
-      name: {
-        name: 'light 1'
-      },
+    devices: lights.map(([id, l]) => ({
+      id,
+      type: l.type,
+      traits: traitsByType(l.type),
+      name: l.name,
       willReportState: false
     }))
   };
+}
+
+function queryAction(action) {
+  const res = {devices: {}};
+  action.payload.devices.map(d => {
+
+    // toDo guille 16.06.22: get device status thrown WS
+    if (data.lights.has(d.id)) {
+      const currentDevice = data.lights.get(d.id);
+      res.devices[d.id] = {
+        status: 'SUCCESS',
+        online: true,
+        on: currentDevice.on
+      }
+    } else {
+      res.devices[d.id] = {
+        status: 'OFFLINE',
+        online: false
+      }
+    }
+  });
+  return res;
+}
+
+function executeAction(action) {
+  const error = [];
+  action.payload.commands.forEach(c => {
+    c.devices.forEach(d => {
+      if (data.lights.has(d.id)) {
+        const currentDevice = data.lights.get(d.id);
+
+      } else {
+        error.push(d);
+      }
+    })
+  });
+}
+
+function traitsByType(type) {
+  switch (type){
+    case 'action.devices.types.OUTLET':
+      return ['action.devices.traits.OnOff'];
+    default:
+      return [];
+  }
 }
 
 module.exports = router;
