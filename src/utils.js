@@ -47,6 +47,15 @@ function createToken(payload = {}, expiresIn = '20m') {
   return jwt.sign(payload, env.key, {expiresIn});
 }
 
+const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+function randomText(size = 10) {
+  let res = '';
+  for (let i = 0; i < size; i++) {
+    res += characters.charAt(Math.floor(characters.length * Math.random()));
+  }
+  return res;
+}
+
 module.exports = {
   queryToStr,
   createCode,
@@ -56,5 +65,6 @@ module.exports = {
   createCode,
   CODE_TOKEN_TYPE,
   REFRESH_TOKEN_TYPE,
-  ACCESS_TOKEN_TYPE
+  ACCESS_TOKEN_TYPE,
+  randomText
 };

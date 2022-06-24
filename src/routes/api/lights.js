@@ -19,13 +19,13 @@ router.post('/:lid/off', (req, res) => {
   res.send('');
 });
 
-router.post('/fulfillment', (req, res) => {
+router.post('/fulfillment', async (req, res) => {
   const {requestId, inputs} = req.body;
   let payload;
 
   for (let i = 0; i < inputs.length; i++) {
     const action = inputs[i];
-    payload = handleAction(action);
+    payload = await handleAction(action);
   }
 
   res.send({
@@ -34,12 +34,12 @@ router.post('/fulfillment', (req, res) => {
   });
 });
 
-function handleAction(action) {
+async function handleAction(action) {
   switch (action['intent']) {
     case 'action.devices.SYNC':
       return syncAction();
     case 'action.devices.QUERY':
-      return queryAction(action);
+      return await queryAction(action);
     case 'action.devices.EXECUTE':
       return executeAction(action);
     case 'action.devices.DISCONNECT':
@@ -63,11 +63,11 @@ function syncAction() {
   };
 }
 
-function queryAction(action) {
+async function queryAction(action) {
   const res = {devices: {}};
-  action.payload.devices.map(d => {
+  for (let d of action.payload.devices) {
+    await webSocket.sendMessageWaitResponse(d.id, {payload: {messageType: 'QUERY'}});
 
-    // toDo guille 16.06.22: get device status thrown WS
     if (data.lights.has(d.id)) {
       const currentDevice = data.lights.get(d.id);
       res.devices[d.id] = {
@@ -81,7 +81,7 @@ function queryAction(action) {
         online: false
       }
     }
-  });
+  }
   return res;
 }
 

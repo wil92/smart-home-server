@@ -2,6 +2,7 @@ const request = require('supertest');
 const env = require('../src/environments')
 const {createAccessToken, createRefreshToken} = require("../src/utils");
 const data = require('../src/data');
+const ws = require('../src/socket/web-socket');
 
 describe('Functions test', () => {
   let app;
@@ -15,6 +16,11 @@ describe('Functions test', () => {
     env.auth2ClientSecret = 'GOOGLE_CLIENT_SECRET';
     env.auth2redirectUri = 'REDIRECT_URI';
     env.googleUserId = 'AGENT_USER_ID';
+  });
+
+  beforeEach(() => {
+    data.lights.clear();
+    jest.clearAllMocks();
   });
 
   it('should get 401 if the request did not have and access_token', async () => {
@@ -45,7 +51,6 @@ describe('Functions test', () => {
 
   it('should SYNC the items with google actions', async () => {
     const token = createAccessToken();
-    data.lights.clear();
     data.lights.set('CgCGzmhvelv', {
       id: 'CgCGzmhvelv',
       on: true,
@@ -88,8 +93,9 @@ describe('Functions test', () => {
   });
 
   it('should response to the QUERY request', async () => {
+    jest.spyOn(ws, 'sendMessageWaitResponse').mockReturnValue(Promise.resolve());
+
     const token = createAccessToken();
-    data.lights.clear();
     data.lights.set('CgCGzmhvelv', {
       id: 'CgCGzmhvelv',
       on: true,
@@ -136,7 +142,6 @@ describe('Functions test', () => {
 
   it('should response to the EXECUTE request', async () => {
     const token = createAccessToken();
-    data.lights.clear();
     data.lights.set('CgCGzmhvelv', {
       id: 'CgCGzmhvelv',
       on: true,
