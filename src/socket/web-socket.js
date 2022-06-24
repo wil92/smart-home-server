@@ -10,8 +10,9 @@ function heartbeat() {
   this.isAlive = true;
 }
 
+const incomeMessages = new Subject();
+
 const ws = {
-  incomeMessages: new Subject(),
   wss,
 
   startWebSocket: (server) => {
@@ -31,7 +32,7 @@ const ws = {
           data.lights.set(messageObj.payload.id, messageObj.payload);
           ws.lid = messageObj.payload.id;
 
-          this.incomeMessages.emit(messageObj.mid);
+          incomeMessages.next(messageObj);
         } catch (ignore) {
           // ignore
         }
@@ -56,13 +57,15 @@ const ws = {
     const mid = this.sendMessage(id, message);
 
     return new Promise((resolve, reject) => {
-      this.incomeMessages
+      incomeMessages
         .pipe(
           filter(m => m.mid === mid),
           takeUntil(timer(1000).pipe(tap(() => reject()))),
           first()
         )
-        .subscribe(m => resolve(m));
+        .subscribe(m => {
+          resolve(m);
+        });
     });
   },
 

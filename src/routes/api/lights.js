@@ -66,9 +66,8 @@ function syncAction() {
 async function queryAction(action) {
   const res = {devices: {}};
   for (let d of action.payload.devices) {
-    await webSocket.sendMessageWaitResponse(d.id, {payload: {messageType: 'QUERY'}});
-
     if (data.lights.has(d.id)) {
+      await webSocket.sendMessageWaitResponse(d.id, {payload: {messageType: 'QUERY'}});
       const currentDevice = data.lights.get(d.id);
       res.devices[d.id] = {
         status: 'SUCCESS',
