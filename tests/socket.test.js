@@ -18,7 +18,7 @@ describe('WebSocket', () => {
   });
 
   afterAll(async () => {
-    await server.close();
+    await new Promise(resolve => server.close(() => resolve()));
   });
 
   it('should request QUERY and get answer back', async () => {
@@ -41,7 +41,6 @@ describe('WebSocket', () => {
     });
     await new Promise(resolve => {
       wsc.on('open', () => {
-        // toDo 24.06.22, guille, initial connection
         wsc.send(JSON.stringify(deviceRes));
         resolve();
       });
@@ -72,5 +71,71 @@ describe('WebSocket', () => {
 
     expect(res.body.payload.devices['CgCGzmhvel2'].status).toEqual("OFFLINE");
     expect(res.body.payload.devices['CgCGzmhvel2'].online).toBeFalsy();
+  });
+
+  it('should request EXECUTE and get answer back', async () => {
+    data.lights.clear();
+    const deviceRes = {
+      mid: '',
+      messageType: 'QUERY',
+      payload: {
+        id: 'CgCGzmhvelv',
+        on: true,
+        type: 'action.devices.types.OUTLET',
+        name: {name: 'td1'}
+      }
+    };
+    const wsc = new WebSocket.WebSocket(`ws://localhost:${testPort}`);
+    wsc.on('message', (data) => {
+      const msg = JSON.parse(data);
+      expect(msg.payload.messageType).toEqual('EXECUTE');
+      expect(msg.payload.command.on).toBeFalsy();
+      wsc.send(JSON.stringify({
+        ...deviceRes,
+        mid: msg.mid,
+        payload: {...deviceRes.payload, on: msg.payload.command.on}
+      }));
+    });
+    await new Promise(resolve => {
+      wsc.on('open', () => {
+        wsc.send(JSON.stringify(deviceRes));
+        resolve();
+      });
+    });
+
+    const token = createAccessToken();
+    const res = await request(app).post('/api/lights/fulfillment')
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        requestId: "ff46a3cc-ec34-11e6-b1a0-64510651abcf",
+        inputs: [{
+          intent: "action.devices.EXECUTE",
+          payload: {
+            commands: [{
+              devices: [
+                {id: 'CgCGzmhvelv'},
+                {id: 'nofound'}
+              ],
+              execution: [{
+                command: 'action.devices.commands.OnOff',
+                params: {on: false}
+              }]
+            }]
+          }
+        }]
+      })
+      .expect(200);
+
+    expect(res.body.requestId).toEqual("ff46a3cc-ec34-11e6-b1a0-64510651abcf");
+
+    expect(res.body.payload.commands[0].ids[0]).toEqual('CgCGzmhvelv');
+    expect(res.body.payload.commands[0].status).toEqual('SUCCESS');
+    expect(res.body.payload.commands[0].states.on).toBeFalsy();
+    expect(data.lights.get('CgCGzmhvelv').on).toBeFalsy();
+    expect(res.body.payload.commands[0].states.online).toBeTruthy();
+
+    expect(res.body.payload.commands[1].ids[0]).toEqual("nofound");
+    expect(res.body.payload.commands[1].status).toEqual("OFFLINE");
+    expect(res.body.payload.commands[1].states.online).toBeFalsy();
   });
 });

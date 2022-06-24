@@ -41,7 +41,7 @@ async function handleAction(action) {
     case 'action.devices.QUERY':
       return await queryAction(action);
     case 'action.devices.EXECUTE':
-      return executeAction(action);
+      return await executeAction(action);
     case 'action.devices.DISCONNECT':
       break;
     default:
@@ -84,11 +84,11 @@ async function queryAction(action) {
   return res;
 }
 
-function executeAction(action) {
+async function executeAction(action) {
   const payload = {commands: []}
   const errors = [];
-  action.payload.commands.forEach(c => {
-    c.execution.forEach(exe => {
+  for (let c of action.payload.commands) {
+    for (let exe of c.execution) {
       let commandRes;
       if (exe.command === 'action.devices.commands.OnOff') {
         commandRes = {ids: [], status: "SUCCESS", states: {on: exe.params.on, online: true}};
@@ -97,19 +97,30 @@ function executeAction(action) {
         return;
       }
 
-      c.devices.forEach(d => {
+      for (let d of c.devices) {
         if (data.lights.has(d.id)) {
           const currentDevice = data.lights.get(d.id);
           // toDo guille 16.06.22: execute action here
-          commandRes.ids.push(d.id);
+          await webSocket.sendMessageWaitResponse(d.id, {
+            payload: {
+              messageType: 'EXECUTE',
+              command: {on: exe.params.on}
+            }
+          })
+            .then(() => {
+              commandRes.ids.push(d.id);
+            }).catch((e) => {
+              console.error(e);
+              errors.push(d);
+            });
         } else {
           errors.push(d);
         }
-      });
+      }
 
       payload.commands.push(commandRes);
-    });
-  });
+    }
+  }
 
   if (errors.length > 0) {
     const commandRes = {ids: [], status: 'OFFLINE', states: {online: false}};
