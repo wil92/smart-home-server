@@ -71,6 +71,8 @@ describe('WebSocket', () => {
 
     expect(res.body.payload.devices['CgCGzmhvel2'].status).toEqual("OFFLINE");
     expect(res.body.payload.devices['CgCGzmhvel2'].online).toBeFalsy();
+
+    wsc.close();
   });
 
   it('should request EXECUTE and get answer back', async () => {
@@ -137,5 +139,7 @@ describe('WebSocket', () => {
     expect(res.body.payload.commands[1].ids[0]).toEqual("nofound");
     expect(res.body.payload.commands[1].status).toEqual("OFFLINE");
     expect(res.body.payload.commands[1].states.online).toBeFalsy();
+
+    wsc.close();
   });
 });
