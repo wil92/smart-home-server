@@ -1,4 +1,6 @@
 const jwt = require('jsonwebtoken');
+const bcrypt = require("bcrypt");
+
 const env = require('./environments');
 
 const CODE_TOKEN_TYPE = 'code';
@@ -56,6 +58,15 @@ function randomText(size = 10) {
   return res;
 }
 
+async function hashPassword(password) {
+  const salt = await bcrypt.genSalt(10);
+  return await bcrypt.hash(password, salt);
+}
+
+async function validatePassword(password, hash) {
+  return await bcrypt.compare(password, hash);
+}
+
 module.exports = {
   queryToStr,
   createCode,
@@ -66,5 +77,7 @@ module.exports = {
   CODE_TOKEN_TYPE,
   REFRESH_TOKEN_TYPE,
   ACCESS_TOKEN_TYPE,
-  randomText
+  randomText,
+  hashPassword,
+  validatePassword
 };

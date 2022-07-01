@@ -12,6 +12,7 @@ const app = require('../app');
 const webSocket = require('../src/socket/web-socket');
 const debug = require('debug')('smart-home-server:server');
 const http = require('http');
+const {connectDb} = require('../src/models');
 
 /**
  * Get port from environment and store in Express.
@@ -28,10 +29,12 @@ const server = http.createServer(app);
  * Listen on provided port, on all network interfaces.
  */
 
-server.listen(port);
-server.on('error', onError);
-server.on('listening', onListening);
-webSocket.startWebSocket(server);
+connectDb().then(async () => {
+  server.listen(port);
+  server.on('error', onError);
+  server.on('listening', onListening);
+  webSocket.startWebSocket(server);
+});
 
 /**
  * Normalize a port into a number, string, or false.

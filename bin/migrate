@@ -1,0 +1,12 @@
+#!/usr/bin/env node
+
+if (process.env.NODE_ENV !== 'test') {
+  require('dotenv').config();
+}
+
+const {connectDb, runMigrations} = require("../src/models");
+
+connectDb().then(async () => {
+  await runMigrations();
+  process.exit(0);
+});

@@ -1,18 +1,32 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const data = require("../data");
-const {queryToStr, createCode, auth2Response, CODE_TOKEN_TYPE, REFRESH_TOKEN_TYPE} = require("../utils");
+const {
+  queryToStr,
+  createCode,
+  auth2Response,
+  CODE_TOKEN_TYPE,
+  REFRESH_TOKEN_TYPE,
+  validatePassword
+} = require("../utils");
 const env = require('../environments');
 
 const router = express.Router();
+const {models} = require('../models');
 
 router.get('/', (req, res, next) => {
   res.render('login', {title: 'LogIn', data, query: queryToStr(req.query), error: null});
 });
 
-router.post('/', (req, res, next) => {
+router.post('/', async (req, res, next) => {
   const {username, password} = req.body;
-  if (env.username !== username || env.password !== password) {
+  let isValidPassword = false;
+  const user = await models.User.findOne({username});
+  if (!!user) {
+    isValidPassword = await validatePassword(password, user.password);
+  }
+  if (!isValidPassword) {
+    res.status(401);
     return res.render('login', {
       title: 'LogIn',
       data,
