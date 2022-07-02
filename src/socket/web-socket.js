@@ -1,8 +1,8 @@
 const WebSocket = require('ws');
 
-const data = require('../data');
 const {randomText} = require("../utils");
 const {Subject, timer, filter, first, takeUntil, tap} = require("rxjs");
+const {models} = require("../models");
 
 let wss;
 
@@ -11,9 +11,16 @@ function heartbeat() {
 }
 
 const incomeMessages = new Subject();
+const connectedDevices = new Set();
 
 const ws = {
   wss,
+  incomeMessages,
+
+  stop: async() => {
+    await wss.stop();
+    await wss.terminate();
+  },
 
   startWebSocket: (server) => {
     wss = new WebSocket.Server({server});
@@ -23,18 +30,19 @@ const ws = {
       ws.isAlive = true;
       ws.on('pong', heartbeat);
 
-      ws.on('message', (message) => {
+      ws.on('message', async (message) => {
         console.log(message.toString());
 
         try {
           const messageObj = JSON.parse(message.toString());
 
-          data.lights.set(messageObj.payload.id, messageObj.payload);
+          await models.Device.updateOrCreate(messageObj);
+          connectedDevices.add(messageObj.payload.id);
           ws.lid = messageObj.payload.id;
 
           incomeMessages.next(messageObj);
-        } catch (ignore) {
-          // ignore
+        } catch (err) {
+          console.error(err);
         }
       });
     });
@@ -43,10 +51,10 @@ const ws = {
       wss.clients.forEach((ws) => {
 
         if (!ws.isAlive) {
-          data.lights.delete(ws.lid);
           return ws.terminate();
         }
 
+        connectedDevices.delete(ws.lid);
         ws.isAlive = false;
         ws.ping(null, false, true);
       });

@@ -1,12 +1,13 @@
 const express = require('express');
 const router = express.Router();
+
+const {models} = require('../../models');
 const webSocket = require('../../socket/web-socket');
-
 const env = require('../../environments');
-const data = require('../../data');
 
-router.get('/', (req, res, next) => {
-  res.send(Array.from(data.lights).map(([k, v]) => v));
+router.get('/', async (req, res, next) => {
+  const lights = await models.Device.find();
+  res.send(lights);
 });
 
 router.post('/:lid/on', (req, res) => {
@@ -37,7 +38,7 @@ router.post('/fulfillment', async (req, res) => {
 async function handleAction(action) {
   switch (action['intent']) {
     case 'action.devices.SYNC':
-      return syncAction();
+      return await syncAction();
     case 'action.devices.QUERY':
       return await queryAction(action);
     case 'action.devices.EXECUTE':
@@ -49,12 +50,13 @@ async function handleAction(action) {
   }
 }
 
-function syncAction() {
-  const lights = Array.from(data.lights);
+async function syncAction() {
+  // const lights = Array.from(data.lights);
+  const lights = await models.Device.find();
   return {
     agentUserId: env.googleUserId,
-    devices: lights.map(([id, l]) => ({
-      id,
+    devices: lights.map(l => ({
+      id: l.did,
       type: l.type,
       traits: traitsByType(l.type),
       name: l.name,
@@ -66,13 +68,14 @@ function syncAction() {
 async function queryAction(action) {
   const res = {devices: {}};
   for (let d of action.payload.devices) {
-    if (data.lights.has(d.id)) {
+    const existDevice = await models.Device.exist(d.id);
+    if (existDevice) {
       await webSocket.sendMessageWaitResponse(d.id, {payload: {messageType: 'QUERY'}});
-      const currentDevice = data.lights.get(d.id);
+      const de = await models.Device.findOne({did: d.id});
       res.devices[d.id] = {
         status: 'SUCCESS',
         online: true,
-        on: currentDevice.on
+        on: de.params.on
       }
     } else {
       res.devices[d.id] = {
@@ -93,14 +96,13 @@ async function executeAction(action) {
       if (exe.command === 'action.devices.commands.OnOff') {
         commandRes = {ids: [], status: "SUCCESS", states: {on: exe.params.on, online: true}};
       } else {
-        // toDo guille 16.06.22: not handle command
+        // toDo guille 16.06.22: not handle commands
         return;
       }
 
       for (let d of c.devices) {
-        if (data.lights.has(d.id)) {
-          const currentDevice = data.lights.get(d.id);
-          // toDo guille 16.06.22: execute action here
+        const existDevice = await models.Device.exist(d.id);
+        if (existDevice) {
           await webSocket.sendMessageWaitResponse(d.id, {
             payload: {
               messageType: 'EXECUTE',

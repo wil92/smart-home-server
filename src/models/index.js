@@ -4,11 +4,12 @@ const mongoose = require('mongoose');
 
 const User = require('./user');
 const Version = require('./version');
+const Device = require('./device');
 const env = require('../environments');
 
-const models = { User };
+const models = { User, Device };
 
-const connectDb = () => {
+const connectDb = async () => {
   const dbUrl = `mongodb://${env.dbHost}:${env.dbPort}/${env.dbName}`;
   return mongoose.connect(dbUrl);
 };

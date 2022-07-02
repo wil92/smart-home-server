@@ -1,6 +1,6 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const data = require("../data");
+
 const {
   queryToStr,
   createCode,
@@ -10,12 +10,12 @@ const {
   validatePassword
 } = require("../utils");
 const env = require('../environments');
-
-const router = express.Router();
 const {models} = require('../models');
 
-router.get('/', (req, res, next) => {
-  res.render('login', {title: 'LogIn', data, query: queryToStr(req.query), error: null});
+const router = express.Router();
+
+router.get('/', async (req, res, next) => {
+  res.render('login', {title: 'LogIn', query: queryToStr(req.query), error: null});
 });
 
 router.post('/', async (req, res, next) => {
@@ -29,7 +29,6 @@ router.post('/', async (req, res, next) => {
     res.status(401);
     return res.render('login', {
       title: 'LogIn',
-      data,
       query: queryToStr(req.query),
       error: 'Password or Username incorrect'
     });
@@ -43,7 +42,6 @@ router.post('/', async (req, res, next) => {
     } else {
       res.render('login', {
         title: 'LogIn',
-        data,
         query: queryToStr(req.query),
         error: 'Error with Auth2 authentication'
       });

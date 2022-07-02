@@ -3,10 +3,10 @@ const url = require('url');
 const jwt = require('jsonwebtoken');
 const env = require('../src/environments')
 const {createAccessToken, createRefreshToken, createCode} = require("../src/utils");
-const {getApp, closeApp} = require('./dbsetup');
+const {getApp, closeApp} = require('./utils/dbsetup');
 
 describe('Functions test', () => {
-  let app;
+  let app, server;
 
   beforeAll(async () => {
     env.username = 'test';
@@ -15,11 +15,11 @@ describe('Functions test', () => {
     env.auth2ClientSecret = 'GOOGLE_CLIENT_SECRET';
     env.auth2redirectUri = 'REDIRECT_URI';
 
-    app = await getApp();
+    [app, server] = await getApp();
   });
 
   afterAll(async () => {
-    await closeApp();
+    await closeApp(app, server);
   });
 
   it('should get login and redirected to home', async () => {

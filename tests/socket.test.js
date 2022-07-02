@@ -1,50 +1,38 @@
-const WebSocket = require('ws');
-const ws = require("../src/socket/web-socket");
-const http = require("http");
 const {createAccessToken} = require("../src/utils");
 const data = require('../src/data');
 const request = require("supertest");
-
-const testPort = process.env.TEST_PORT || 3023;
+const {createClient, closeClient} = require("./utils/socket");
+const {getApp, closeApp} = require("./utils/dbsetup");
 
 describe('WebSocket', () => {
   let app, server;
 
   beforeAll(async () => {
-    app = require('../app');
-    server = http.createServer(app);
-    ws.startWebSocket(server);
-    return new Promise(resolve => server.listen(testPort, () => resolve()));
+    [app, server] = await getApp();
   });
 
   afterAll(async () => {
-    await new Promise(resolve => server.close(() => resolve()));
+    await closeApp();
+  });
+
+  afterEach(async () => {
+    await closeClient(server);
   });
 
   it('should request QUERY and get answer back', async () => {
-    data.lights.clear();
-    const deviceRes = {
-      mid: '',
-      messageType: 'QUERY',
-      payload: {
-        id: 'CgCGzmhvelv',
-        on: true,
-        type: 'action.devices.types.OUTLET',
-        name: {name: 'td1'}
-      }
-    };
-    const wsc = new WebSocket.WebSocket(`ws://localhost:${testPort}`);
-    wsc.on('message', (data) => {
-      const msg = JSON.parse(data);
-      expect(msg.payload.messageType).toEqual('QUERY');
-      wsc.send(JSON.stringify({...deviceRes, mid: msg.mid}));
-    });
-    await new Promise(resolve => {
-      wsc.on('open', () => {
-        wsc.send(JSON.stringify(deviceRes));
-        resolve();
+    await createClient({
+        messageType: 'QUERY',
+        payload: {
+          id: 'CgCGzmhvelv',
+          on: true,
+          type: 'action.devices.types.OUTLET',
+          name: {name: 'td1'}
+        }
+      },
+      (msg) => {
+        expect(msg.payload.messageType).toEqual('QUERY');
+        return msg;
       });
-    });
 
     const token = createAccessToken();
     const res = await request(app).post('/api/lights/fulfillment')
@@ -71,39 +59,23 @@ describe('WebSocket', () => {
 
     expect(res.body.payload.devices['CgCGzmhvel2'].status).toEqual("OFFLINE");
     expect(res.body.payload.devices['CgCGzmhvel2'].online).toBeFalsy();
-
-    wsc.close();
   });
 
   it('should request EXECUTE and get answer back', async () => {
-    data.lights.clear();
-    const deviceRes = {
-      mid: '',
-      messageType: 'QUERY',
-      payload: {
-        id: 'CgCGzmhvelv',
-        on: true,
-        type: 'action.devices.types.OUTLET',
-        name: {name: 'td1'}
-      }
-    };
-    const wsc = new WebSocket.WebSocket(`ws://localhost:${testPort}`);
-    wsc.on('message', (data) => {
-      const msg = JSON.parse(data);
-      expect(msg.payload.messageType).toEqual('EXECUTE');
-      expect(msg.payload.command.on).toBeFalsy();
-      wsc.send(JSON.stringify({
-        ...deviceRes,
-        mid: msg.mid,
-        payload: {...deviceRes.payload, on: msg.payload.command.on}
-      }));
-    });
-    await new Promise(resolve => {
-      wsc.on('open', () => {
-        wsc.send(JSON.stringify(deviceRes));
-        resolve();
+    await createClient({
+        messageType: 'QUERY',
+        payload: {
+          id: 'CgCGzmhvelv',
+          on: true,
+          type: 'action.devices.types.OUTLET',
+          name: {name: 'td1'}
+        }
+      },
+      (msg) => {
+        expect(msg.payload.messageType).toEqual('EXECUTE');
+        expect(msg.payload.command.on).toBeFalsy();
+        return msg;
       });
-    });
 
     const token = createAccessToken();
     const res = await request(app).post('/api/lights/fulfillment')
@@ -133,13 +105,10 @@ describe('WebSocket', () => {
     expect(res.body.payload.commands[0].ids[0]).toEqual('CgCGzmhvelv');
     expect(res.body.payload.commands[0].status).toEqual('SUCCESS');
     expect(res.body.payload.commands[0].states.on).toBeFalsy();
-    expect(data.lights.get('CgCGzmhvelv').on).toBeFalsy();
     expect(res.body.payload.commands[0].states.online).toBeTruthy();
 
     expect(res.body.payload.commands[1].ids[0]).toEqual("nofound");
     expect(res.body.payload.commands[1].status).toEqual("OFFLINE");
     expect(res.body.payload.commands[1].states.online).toBeFalsy();
-
-    wsc.close();
   });
 });

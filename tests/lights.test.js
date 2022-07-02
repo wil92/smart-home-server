@@ -1,25 +1,29 @@
 const request = require('supertest');
 const env = require('../src/environments')
 const {createAccessToken, createRefreshToken} = require("../src/utils");
-const data = require('../src/data');
-const ws = require('../src/socket/web-socket');
+const {getApp, closeApp} = require("./utils/dbsetup");
+const {closeClient, createClient} = require("./utils/socket");
 
 describe('Functions test', () => {
   let app;
 
-  beforeAll(() => {
-    app = require('../app');
-
+  beforeAll(async () => {
     env.username = 'test';
     env.password = 'test';
     env.auth2ClientId = 'GOOGLE_CLIENT_ID';
     env.auth2ClientSecret = 'GOOGLE_CLIENT_SECRET';
     env.auth2redirectUri = 'REDIRECT_URI';
     env.googleUserId = 'AGENT_USER_ID';
+
+    [app, server] = await getApp();
   });
 
-  beforeEach(() => {
-    data.lights.clear();
+  afterAll(async () => {
+    await closeApp(server);
+  });
+
+  afterEach(async () => {
+    await closeClient();
     jest.clearAllMocks();
   });
 
@@ -50,19 +54,9 @@ describe('Functions test', () => {
   });
 
   it('should SYNC the items with google actions', async () => {
+    await connectDevices();
+
     const token = createAccessToken();
-    data.lights.set('CgCGzmhvelv', {
-      id: 'CgCGzmhvelv',
-      on: true,
-      type: 'action.devices.types.OUTLET',
-      name: {name: 'td1'}
-    });
-    data.lights.set('CgCGzmhvel2', {
-      id: 'CgCGzmhvel2',
-      on: false,
-      type: 'action.devices.types.OUTLET',
-      name: {name: 'td2'}
-    });
     const res = await request(app).post('/api/lights/fulfillment')
       .set('Authorization', `Bearer ${token}`)
       .send({
@@ -93,22 +87,9 @@ describe('Functions test', () => {
   });
 
   it('should response to the QUERY request', async () => {
-    jest.spyOn(ws, 'sendMessageWaitResponse').mockReturnValue(Promise.resolve());
+    await connectDevices();
 
     const token = createAccessToken();
-    data.lights.set('CgCGzmhvelv', {
-      id: 'CgCGzmhvelv',
-      on: true,
-      type: 'action.devices.types.OUTLET',
-      name: {name: 'td1'}
-    });
-    data.lights.set('CgCGzmhvel2', {
-      id: 'CgCGzmhvel2',
-      on: false,
-      type: 'action.devices.types.OUTLET',
-      name: {name: 'td2'}
-    });
-
     const res = await request(app).post('/api/lights/fulfillment')
       .set('Authorization', `Bearer ${token}`)
       .send({
@@ -141,20 +122,9 @@ describe('Functions test', () => {
   });
 
   it('should response to the EXECUTE request', async () => {
-    const token = createAccessToken();
-    data.lights.set('CgCGzmhvelv', {
-      id: 'CgCGzmhvelv',
-      on: true,
-      type: 'action.devices.types.OUTLET',
-      name: {name: 'td1'}
-    });
-    data.lights.set('CgCGzmhvel2', {
-      id: 'CgCGzmhvel2',
-      on: false,
-      type: 'action.devices.types.OUTLET',
-      name: {name: 'td2'}
-    });
+    await connectDevices();
 
+    const token = createAccessToken();
     const res = await request(app).post('/api/lights/fulfillment')
       .set('Authorization', `Bearer ${token}`)
       .send({
@@ -201,4 +171,25 @@ describe('Functions test', () => {
     expect(res.body.payload.commands[2].status).toEqual("OFFLINE");
     expect(res.body.payload.commands[2].states.online).toBeFalsy();
   });
+
+  async function connectDevices() {
+    await createClient({
+      messageType: 'QUERY',
+      payload: {
+        id: 'CgCGzmhvelv',
+        on: true,
+        type: 'action.devices.types.OUTLET',
+        name: {name: 'td1'}
+      }
+    });
+    await createClient({
+      messageType: 'QUERY',
+      payload: {
+        id: 'CgCGzmhvel2',
+        on: false,
+        type: 'action.devices.types.OUTLET',
+        name: {name: 'td2'}
+      }
+    });
+  }
 });
