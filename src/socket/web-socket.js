@@ -1,10 +1,10 @@
-const WebSocket = require('ws');
+const {WebSocketServer} = require("ws");
 
 const {randomText} = require("../utils");
 const {Subject, timer, filter, first, takeUntil, tap} = require("rxjs");
 const {models} = require("../models");
 
-let wss;
+let wss, intervalId;
 
 function heartbeat() {
   this.isAlive = true;
@@ -17,13 +17,13 @@ const ws = {
   wss,
   incomeMessages,
 
-  stop: async() => {
-    await wss.stop();
-    await wss.terminate();
+  stop: async () => {
+    clearInterval(intervalId);
+    return new Promise(resolve => wss.close(resolve));
   },
 
   startWebSocket: (server) => {
-    wss = new WebSocket.Server({server});
+    wss = new WebSocketServer({server});
 
     wss.on('connection', (ws) => {
       console.log('NEW CONNECTION');
@@ -47,7 +47,7 @@ const ws = {
       });
     });
 
-    setInterval(() => {
+    intervalId = setInterval(() => {
       wss.clients.forEach((ws) => {
 
         if (!ws.isAlive) {

@@ -1,8 +1,8 @@
 const request = require('supertest');
+
 const env = require('../src/environments')
 const {createAccessToken, createRefreshToken} = require("../src/utils");
-const {getApp, closeApp} = require("./utils/dbsetup");
-const {closeClient, createClient} = require("./utils/socket");
+const {getApp, closeApp, closeClient, createClient} = require("./utils/utils");
 
 describe('Functions test', () => {
   let app;
@@ -15,11 +15,11 @@ describe('Functions test', () => {
     env.auth2redirectUri = 'REDIRECT_URI';
     env.googleUserId = 'AGENT_USER_ID';
 
-    [app, server] = await getApp();
+    [app] = await getApp();
   });
 
   afterAll(async () => {
-    await closeApp(server);
+    await closeApp();
   });
 
   afterEach(async () => {

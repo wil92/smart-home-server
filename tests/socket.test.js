@@ -1,14 +1,13 @@
-const {createAccessToken} = require("../src/utils");
-const data = require('../src/data');
 const request = require("supertest");
-const {createClient, closeClient} = require("./utils/socket");
-const {getApp, closeApp} = require("./utils/dbsetup");
+
+const {createAccessToken} = require("../src/utils");
+const {getApp, closeApp, createClient, closeClient} = require("./utils/utils");
 
 describe('WebSocket', () => {
-  let app, server;
+  let app;
 
   beforeAll(async () => {
-    [app, server] = await getApp();
+    [app] = await getApp();
   });
 
   afterAll(async () => {
@@ -16,7 +15,7 @@ describe('WebSocket', () => {
   });
 
   afterEach(async () => {
-    await closeClient(server);
+    await closeClient();
   });
 
   it('should request QUERY and get answer back', async () => {

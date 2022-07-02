@@ -1,11 +1,39 @@
+const http = require("http");
+const mongoose = require("mongoose");
 const WebSocket = require("ws");
 const {filter} = require("rxjs");
 
-const ws = require('../../src/socket/web-socket')
+const env = require("../../src/environments");
+const {connectDb, dropDatabase, runMigrations} = require("../../src/models");
+const ws = require("../../src/socket/web-socket");
 
-const testPort = process.env.TEST_PORT || 3023;
-
+let testPort;
+let server;
 let clients = [];
+
+async function getApp() {
+  env.dbName = 'testdb';
+  await connectDb();
+  await runMigrations();
+  const app = require('../../app');
+  server = http.createServer(app);
+  ws.startWebSocket(server);
+  await server.listen(0);
+  testPort = server.address().port;
+  return [app, server];
+}
+
+async function closeApp() {
+  try {
+    await dropDatabase();
+    await mongoose.connection.close();
+    await ws.stop();
+    await new Promise(resolve => server.close(resolve));
+    await new Promise(resolve => setTimeout(resolve, 1000))
+  } catch (e) {
+    console.error(e);
+  }
+}
 
 async function createClient(deviceRes, onMessage = (msg) => msg) {
   deviceRes = {
@@ -44,4 +72,4 @@ async function closeClient() {
   clients = [];
 }
 
-module.exports = {createClient, closeClient};
+module.exports = {getApp, closeApp, createClient, closeClient};

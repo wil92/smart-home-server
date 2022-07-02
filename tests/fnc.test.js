@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+
 const {hashPassword, validatePassword} = require("../src/utils");
 
 describe('Functions test', () => {
