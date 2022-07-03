@@ -1,9 +1,12 @@
 const request = require('supertest');
 const url = require('url');
 const jwt = require('jsonwebtoken');
+
 const env = require('../src/environments')
 const {createAccessToken, createRefreshToken, createCode} = require("../src/utils");
-const {getApp, closeApp} = require('./utils/dbsetup');
+const {getApp, closeApp} = require('./utils/utils');
+
+jest.setTimeout(10000)
 
 describe('Functions test', () => {
   let app, server;
@@ -19,11 +22,11 @@ describe('Functions test', () => {
   });
 
   afterAll(async () => {
-    await closeApp(app, server);
+    await closeApp();
   });
 
   it('should get login and redirected to home', async () => {
-    const res = await request(app).post('/auth')
+    const res = await request(server).post('/auth')
         .expect(302)
         .send({username: 'test', password: 'test'});
     expect(res.headers.location).toEqual('/');

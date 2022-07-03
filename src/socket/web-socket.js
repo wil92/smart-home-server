@@ -1,14 +1,10 @@
-const WebSocket = require('ws');
+const {WebSocketServer} = require("ws");
 
 const {randomText} = require("../utils");
 const {Subject, timer, filter, first, takeUntil, tap} = require("rxjs");
 const {models} = require("../models");
 
-let wss;
-
-function heartbeat() {
-  this.isAlive = true;
-}
+let wss, intervalId;
 
 const incomeMessages = new Subject();
 const connectedDevices = new Set();
@@ -16,19 +12,23 @@ const connectedDevices = new Set();
 const ws = {
   wss,
   incomeMessages,
+  connectedDevices,
 
-  stop: async() => {
-    await wss.stop();
-    await wss.terminate();
+  stop: async () => {
+    clearInterval(intervalId);
+    return new Promise(resolve => wss.close(resolve));
   },
 
   startWebSocket: (server) => {
-    wss = new WebSocket.Server({server});
+    wss = new WebSocketServer({server});
 
     wss.on('connection', (ws) => {
       console.log('NEW CONNECTION');
       ws.isAlive = true;
-      ws.on('pong', heartbeat);
+
+      ws.on('pong', function () {
+        this.isAlive=true;
+      });
 
       ws.on('message', async (message) => {
         console.log(message.toString());
@@ -47,7 +47,7 @@ const ws = {
       });
     });
 
-    setInterval(() => {
+    intervalId = setInterval(() => {
       wss.clients.forEach((ws) => {
 
         if (!ws.isAlive) {
@@ -58,7 +58,7 @@ const ws = {
         ws.isAlive = false;
         ws.ping(null, false, true);
       });
-    }, 4000);
+    }, 1000);
   },
 
   async sendMessageWaitResponse(id, message) {
@@ -68,8 +68,8 @@ const ws = {
       incomeMessages
         .pipe(
           filter(m => m.mid === mid),
+          first(),
           takeUntil(timer(1000).pipe(tap(() => reject()))),
-          first()
         )
         .subscribe(m => {
           resolve(m);

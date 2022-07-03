@@ -1,8 +1,10 @@
 const request = require('supertest');
+
 const env = require('../src/environments')
 const {createAccessToken, createRefreshToken} = require("../src/utils");
-const {getApp, closeApp} = require("./utils/dbsetup");
-const {closeClient, createClient} = require("./utils/socket");
+const {getApp, closeApp, closeClients, createClient, closeClient} = require("./utils/utils");
+
+jest.setTimeout(1000000);
 
 describe('Functions test', () => {
   let app;
@@ -15,16 +17,15 @@ describe('Functions test', () => {
     env.auth2redirectUri = 'REDIRECT_URI';
     env.googleUserId = 'AGENT_USER_ID';
 
-    [app, server] = await getApp();
+    [app] = await getApp();
   });
 
   afterAll(async () => {
-    await closeApp(server);
+    await closeApp();
   });
 
   afterEach(async () => {
-    await closeClient();
-    jest.clearAllMocks();
+    await closeClients();
   });
 
   it('should get 401 if the request did not have and access_token', async () => {
@@ -88,6 +89,7 @@ describe('Functions test', () => {
 
   it('should response to the QUERY request', async () => {
     await connectDevices();
+    await closeClient('CgCGzmhvel2');
 
     const token = createAccessToken();
     const res = await request(app).post('/api/lights/fulfillment')
@@ -113,16 +115,17 @@ describe('Functions test', () => {
     expect(res.body.payload.devices['CgCGzmhvelv'].online).toBeTruthy();
     expect(res.body.payload.devices['CgCGzmhvelv'].on).toBeTruthy();
 
-    expect(res.body.payload.devices['CgCGzmhvel2'].status).toEqual("SUCCESS");
-    expect(res.body.payload.devices['CgCGzmhvel2'].online).toBeTruthy();
-    expect(res.body.payload.devices['CgCGzmhvel2'].on).toBeFalsy();
+    expect(res.body.payload.devices['CgCGzmhvel2'].status).toEqual("OFFLINE");
+    expect(res.body.payload.devices['CgCGzmhvel2'].online).toBeFalsy();
 
-    expect(res.body.payload.devices['nofound'].status).toEqual("OFFLINE");
+    expect(res.body.payload.devices['nofound'].status).toEqual("ERROR");
     expect(res.body.payload.devices['nofound'].online).toBeFalsy();
+    expect(res.body.payload.devices['nofound'].errorCode).toEqual('Device is available in the system');
   });
 
   it('should response to the EXECUTE request', async () => {
     await connectDevices();
+    await closeClient('CgCGzmhvel2');
 
     const token = createAccessToken();
     const res = await request(app).post('/api/lights/fulfillment')
@@ -163,13 +166,12 @@ describe('Functions test', () => {
     expect(res.body.payload.commands[0].states.online).toBeTruthy();
 
     expect(res.body.payload.commands[1].ids[0]).toEqual("CgCGzmhvel2");
-    expect(res.body.payload.commands[1].status).toEqual('SUCCESS');
-    expect(res.body.payload.commands[1].states.on).toBeTruthy();
-    expect(res.body.payload.commands[1].states.online).toBeTruthy();
+    expect(res.body.payload.commands[1].status).toEqual('OFFLINE');
+    expect(res.body.payload.commands[1].states.online).toBeFalsy();
 
     expect(res.body.payload.commands[2].ids[0]).toEqual("nofound");
-    expect(res.body.payload.commands[2].status).toEqual("OFFLINE");
-    expect(res.body.payload.commands[2].states.online).toBeFalsy();
+    expect(res.body.payload.commands[2].status).toEqual("ERROR");
+    expect(res.body.payload.commands[2].errorCode).toEqual("Device is available in the system");
   });
 
   async function connectDevices() {

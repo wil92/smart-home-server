@@ -1,14 +1,13 @@
-const {createAccessToken} = require("../src/utils");
-const data = require('../src/data');
 const request = require("supertest");
-const {createClient, closeClient} = require("./utils/socket");
-const {getApp, closeApp} = require("./utils/dbsetup");
+
+const {createAccessToken} = require("../src/utils");
+const {getApp, closeApp, createClient, closeClients} = require("./utils/utils");
 
 describe('WebSocket', () => {
-  let app, server;
+  let app;
 
   beforeAll(async () => {
-    [app, server] = await getApp();
+    [app] = await getApp();
   });
 
   afterAll(async () => {
@@ -16,7 +15,7 @@ describe('WebSocket', () => {
   });
 
   afterEach(async () => {
-    await closeClient(server);
+    await closeClients();
   });
 
   it('should request QUERY and get answer back', async () => {
@@ -57,8 +56,9 @@ describe('WebSocket', () => {
     expect(res.body.payload.devices['CgCGzmhvelv'].online).toBeTruthy();
     expect(res.body.payload.devices['CgCGzmhvelv'].on).toBeTruthy();
 
-    expect(res.body.payload.devices['CgCGzmhvel2'].status).toEqual("OFFLINE");
+    expect(res.body.payload.devices['CgCGzmhvel2'].status).toEqual("ERROR");
     expect(res.body.payload.devices['CgCGzmhvel2'].online).toBeFalsy();
+    expect(res.body.payload.devices['CgCGzmhvel2'].errorCode).toEqual('Device is available in the system');
   });
 
   it('should request EXECUTE and get answer back', async () => {
@@ -108,7 +108,7 @@ describe('WebSocket', () => {
     expect(res.body.payload.commands[0].states.online).toBeTruthy();
 
     expect(res.body.payload.commands[1].ids[0]).toEqual("nofound");
-    expect(res.body.payload.commands[1].status).toEqual("OFFLINE");
-    expect(res.body.payload.commands[1].states.online).toBeFalsy();
+    expect(res.body.payload.commands[1].status).toEqual("ERROR");
+    expect(res.body.payload.commands[1].errorCode).toEqual("Device is available in the system");
   });
 });

@@ -70,18 +70,33 @@ async function queryAction(action) {
   for (let d of action.payload.devices) {
     const existDevice = await models.Device.exist(d.id);
     if (existDevice) {
-      await webSocket.sendMessageWaitResponse(d.id, {payload: {messageType: 'QUERY'}});
-      const de = await models.Device.findOne({did: d.id});
-      res.devices[d.id] = {
-        status: 'SUCCESS',
-        online: true,
-        on: de.params.on
+      let isConnected = webSocket.connectedDevices.has(d.id);
+      if (isConnected) {
+        try {
+          await webSocket.sendMessageWaitResponse(d.id, {payload: {messageType: 'QUERY'}});
+        } catch (ignore) {
+          isConnected = false;
+        }
+      }
+      if (isConnected) {
+        const de = await models.Device.findOne({did: d.id});
+        res.devices[d.id] = {
+          status: 'SUCCESS',
+          online: true,
+          on: de.params.on
+        };
+      } else {
+        res.devices[d.id] = {
+          status: 'OFFLINE',
+          online: false
+        };
       }
     } else {
       res.devices[d.id] = {
-        status: 'OFFLINE',
-        online: false
-      }
+        status: 'ERROR',
+        online: false,
+        errorCode: 'Device is available in the system'
+      };
     }
   }
   return res;
@@ -90,6 +105,7 @@ async function queryAction(action) {
 async function executeAction(action) {
   const payload = {commands: []}
   const errors = [];
+  const offlines = [];
   for (let c of action.payload.commands) {
     for (let exe of c.execution) {
       let commandRes;
@@ -103,29 +119,43 @@ async function executeAction(action) {
       for (let d of c.devices) {
         const existDevice = await models.Device.exist(d.id);
         if (existDevice) {
-          await webSocket.sendMessageWaitResponse(d.id, {
-            payload: {
-              messageType: 'EXECUTE',
-              command: {on: exe.params.on}
+          let isConnected = webSocket.connectedDevices.has(d.id);
+          if (isConnected) {
+            try {
+              await webSocket.sendMessageWaitResponse(d.id, {
+                payload: {
+                  messageType: 'EXECUTE',
+                  command: {on: exe.params.on}
+                }
+              });
+            } catch (e) {
+              isConnected = false;
             }
-          })
-            .then(() => {
-              commandRes.ids.push(d.id);
-            }).catch((e) => {
-              console.error(e);
-              errors.push(d);
-            });
+          }
+          if (isConnected) {
+            commandRes.ids.push(d.id);
+          } else {
+            offlines.push(d);
+          }
         } else {
           errors.push(d);
         }
       }
 
-      payload.commands.push(commandRes);
+      if (commandRes.ids.length > 0) {
+        payload.commands.push(commandRes);
+      }
     }
   }
 
-  if (errors.length > 0) {
+  if (offlines.length > 0) {
     const commandRes = {ids: [], status: 'OFFLINE', states: {online: false}};
+    offlines.forEach(e => commandRes.ids.push(e.id));
+    payload.commands.push(commandRes);
+  }
+
+  if (errors.length > 0) {
+    const commandRes = {ids: [], status: 'ERROR', errorCode: 'Device is available in the system'};
     errors.forEach(e => commandRes.ids.push(e.id));
     payload.commands.push(commandRes);
   }

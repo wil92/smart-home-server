@@ -6,7 +6,7 @@
     "start": "npm run migrate && node ./bin/www",
     "dev": "npm run migrate && nodemon ./bin/www",
     "migrate": "node ./bin/migrate",
-    "test": "NODE_ENV=test && jest --forceExit"
+    "test": "NODE_ENV=test && jest --maxWorkers=1"
   },
   "dependencies": {
     "bcrypt": "^5.0.1",
