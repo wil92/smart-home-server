@@ -6,16 +6,13 @@ const {models} = require("../models");
 
 let wss, intervalId;
 
-function heartbeat() {
-  this.isAlive = true;
-}
-
 const incomeMessages = new Subject();
 const connectedDevices = new Set();
 
 const ws = {
   wss,
   incomeMessages,
+  connectedDevices,
 
   stop: async () => {
     clearInterval(intervalId);
@@ -28,7 +25,10 @@ const ws = {
     wss.on('connection', (ws) => {
       console.log('NEW CONNECTION');
       ws.isAlive = true;
-      ws.on('pong', heartbeat);
+
+      ws.on('pong', function () {
+        this.isAlive=true;
+      });
 
       ws.on('message', async (message) => {
         console.log(message.toString());
@@ -58,7 +58,7 @@ const ws = {
         ws.isAlive = false;
         ws.ping(null, false, true);
       });
-    }, 4000);
+    }, 1000);
   },
 
   async sendMessageWaitResponse(id, message) {
@@ -68,8 +68,8 @@ const ws = {
       incomeMessages
         .pipe(
           filter(m => m.mid === mid),
+          first(),
           takeUntil(timer(1000).pipe(tap(() => reject()))),
-          first()
         )
         .subscribe(m => {
           resolve(m);

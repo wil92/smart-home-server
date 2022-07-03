@@ -29,7 +29,6 @@ async function closeApp() {
     await mongoose.connection.close();
     await ws.stop();
     await new Promise(resolve => server.close(resolve));
-    await new Promise(resolve => setTimeout(resolve, 1000))
   } catch (e) {
     console.error(e);
   }
@@ -61,15 +60,25 @@ async function createClient(deviceRes, onMessage = (msg) => msg) {
   await new Promise(resolve => ws.incomeMessages
     .pipe(filter(m => m.payload.id === deviceRes.payload.id))
     .subscribe(() => resolve()));
+  wsc.did = deviceRes.payload.id;
   clients.push(wsc);
   return wsc;
 }
 
-async function closeClient() {
+async function closeClients() {
   for (const c of clients) {
     await c.close();
   }
   clients = [];
 }
 
-module.exports = {getApp, closeApp, createClient, closeClient};
+async function closeClient(id) {
+  for (const c of clients) {
+    if (c.did === id) {
+      await c.close();
+    }
+  }
+  clients = clients.filter(c => c.did !== id);
+}
+
+module.exports = {getApp, closeApp, createClient, closeClients, closeClient};
