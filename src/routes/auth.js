@@ -28,7 +28,7 @@ async function checkCredentials(username, password) {
 
 router.post('/', async (req, res, next) => {
   const {username, password} = req.body;
-  let isValidPassword = checkCredentials(username, password);
+  let isValidPassword = await checkCredentials(username, password);
   if (!isValidPassword) {
     res.status(401);
     return res.render('login', {

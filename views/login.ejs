@@ -1,24 +1,29 @@
 <!DOCTYPE html>
 <html>
-  <head>
+<head>
     <title><%= title %></title>
-    <link rel='stylesheet' href='/stylesheets/style.css' />
-  </head>
-  <body>
-    <h1><%= title %></h1>
-    <% if (error) { %>
-    <h4><%= error %></h4>
-    <% } %>
-    <form action="/auth?<%= query %>" method="post">
-        <label>
-          username
-          <input type="text" name="username">
-        </label>
-        <label>
-          password
-          <input type="password" name="password">
-        </label>
-        <button type="submit">LogIn</button>
-    </form>
-  </body>
+    <link rel='stylesheet' href='/stylesheets/style.css'/>
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1">
+</head>
+<body class="login-page">
+<div class="page-container">
+    <h1>Authentication</h1>
+    <div class="page-body">
+        <% if (error) { %>
+            <h4><%= error %></h4>
+        <% } %>
+        <form action="/auth?<%= query %>" method="post">
+            <label>
+                <input placeholder="username" type="text" name="username">
+            </label>
+            <label>
+                <input placeholder="password" type="password" name="password">
+            </label>
+            <h5><a href="/policy">Policy</a></h5>
+            <button type="submit">Login</button>
+        </form>
+    </div>
+</div>
+</body>
 </html>

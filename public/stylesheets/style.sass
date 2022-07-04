@@ -1,6 +1,71 @@
 body
-  padding: 50px
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif
 
 a
   color: #00B7FF
+
+.login-page
+  background: #b2a9ecff
+  margin: 0
+
+  .page-container
+    width: 100vw
+    height: 100vh
+    display: flex
+    flex-direction: column
+    align-items: center
+    margin: 0
+
+    h1
+      color: #fff
+
+    .page-body
+      display: flex
+      flex-direction: column
+      width: 100vw
+      height: 100%
+      background: #fff
+      border-radius: 20px 20px 0 0
+      align-items: center
+      //justify-content: center
+
+      h4
+        color: #8479d9
+
+      form
+        display: flex
+        flex-direction: column
+        align-items: end
+        padding-top: 10px
+
+        button
+          margin-top: 20px
+          width: fit-content
+          background: #b2a9ecff
+          border: 0
+          padding: 5px 10px
+          color: #fff
+          font-weight: bold
+          border-radius: 1px
+
+        h5
+          width: 100%
+          text-align: center
+          padding: 0
+          margin: 10px 0 0 0
+
+        label
+          display: flex
+          flex-direction: column
+          margin-top: 10px
+
+          input
+            background: #f3ecfeff
+            border: 0
+            padding: 10px
+            border-radius: 20px
+            color: #8479d9
+
+            &:-webkit-autofill, &:-webkit-autofill:focus, &:-webkit-autofill:focus
+              background: #f3ecfeff
+              color: #8479d9 !important
