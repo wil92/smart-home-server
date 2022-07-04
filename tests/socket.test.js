@@ -58,7 +58,7 @@ describe('WebSocket', () => {
 
     expect(res.body.payload.devices['CgCGzmhvel2'].status).toEqual("ERROR");
     expect(res.body.payload.devices['CgCGzmhvel2'].online).toBeFalsy();
-    expect(res.body.payload.devices['CgCGzmhvel2'].errorCode).toEqual('Device is available in the system');
+    expect(res.body.payload.devices['CgCGzmhvel2'].errorCode).toEqual('Device is not available in the system');
   });
 
   it('should request EXECUTE and get answer back', async () => {
@@ -109,6 +109,6 @@ describe('WebSocket', () => {
 
     expect(res.body.payload.commands[1].ids[0]).toEqual("nofound");
     expect(res.body.payload.commands[1].status).toEqual("ERROR");
-    expect(res.body.payload.commands[1].errorCode).toEqual("Device is available in the system");
+    expect(res.body.payload.commands[1].errorCode).toEqual("Device is not available in the system");
   });
 });

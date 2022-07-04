@@ -74,6 +74,7 @@ describe('Functions test', () => {
     expect(res.body.payload.devices[0].id).toEqual('CgCGzmhvelv');
     expect(res.body.payload.devices[0].type).toEqual('action.devices.types.OUTLET');
     expect(res.body.payload.devices[0].name.name).toEqual('td1');
+    expect(res.body.payload.devices[0].name._id).toBeFalsy();
     expect(res.body.payload.devices[0].willReportState).toBeFalsy();
     expect(res.body.payload.devices[0].traits.length).toEqual(1);
     expect(res.body.payload.devices[0].traits[0]).toEqual('action.devices.traits.OnOff');
@@ -120,7 +121,7 @@ describe('Functions test', () => {
 
     expect(res.body.payload.devices['nofound'].status).toEqual("ERROR");
     expect(res.body.payload.devices['nofound'].online).toBeFalsy();
-    expect(res.body.payload.devices['nofound'].errorCode).toEqual('Device is available in the system');
+    expect(res.body.payload.devices['nofound'].errorCode).toEqual('Device is not available in the system');
   });
 
   it('should response to the EXECUTE request', async () => {
@@ -171,7 +172,7 @@ describe('Functions test', () => {
 
     expect(res.body.payload.commands[2].ids[0]).toEqual("nofound");
     expect(res.body.payload.commands[2].status).toEqual("ERROR");
-    expect(res.body.payload.commands[2].errorCode).toEqual("Device is available in the system");
+    expect(res.body.payload.commands[2].errorCode).toEqual("Device is not available in the system");
   });
 
   async function connectDevices() {

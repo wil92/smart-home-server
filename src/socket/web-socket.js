@@ -27,6 +27,7 @@ const ws = {
       ws.isAlive = true;
 
       ws.on('pong', function () {
+        console.log('pong')
         this.isAlive=true;
       });
 
@@ -51,14 +52,15 @@ const ws = {
       wss.clients.forEach((ws) => {
 
         if (!ws.isAlive) {
+          connectedDevices.delete(ws.lid);
           return ws.terminate();
         }
 
-        connectedDevices.delete(ws.lid);
         ws.isAlive = false;
+        console.log("ping")
         ws.ping(null, false, true);
       });
-    }, 1000);
+    }, 4000);
   },
 
   async sendMessageWaitResponse(id, message) {

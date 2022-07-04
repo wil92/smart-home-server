@@ -32,6 +32,21 @@ describe('Functions test', () => {
     expect(res.headers.location).toEqual('/');
   });
 
+  it('should get login and redirected to home', async () => {
+    const res = await request(server).post('/auth/token')
+        .expect(200)
+        .send({
+          grant_type: 'basic',
+          username: 'test',
+          password: 'test'
+        });
+
+    expect(res.body['token_type']).toEqual('Bearer');
+    expect(res.body['expires_in']).toEqual(7200);// 2h
+    jwt.verify(res.body['access_token'], env.key);
+    jwt.verify(res.body['refresh_token'], env.key);
+  });
+
   it('should test all the auth2 process', async () => {
     // Authenticate and get redirected to google
     const res = await request(app).post('/auth?client_id=GOOGLE_CLIENT_ID&redirect_uri=REDIRECT_URI&state=STATE_STRING&scope=REQUESTED_SCOPES&response_type=code')

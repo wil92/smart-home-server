@@ -18,13 +18,17 @@ router.get('/', async (req, res, next) => {
   res.render('login', {title: 'LogIn', query: queryToStr(req.query), error: null});
 });
 
-router.post('/', async (req, res, next) => {
-  const {username, password} = req.body;
-  let isValidPassword = false;
+async function checkCredentials(username, password) {
   const user = await models.User.findOne({username});
   if (!!user) {
-    isValidPassword = await validatePassword(password, user.password);
+    return await validatePassword(password, user.password);
   }
+  return false;
+}
+
+router.post('/', async (req, res, next) => {
+  const {username, password} = req.body;
+  let isValidPassword = checkCredentials(username, password);
   if (!isValidPassword) {
     res.status(401);
     return res.render('login', {
@@ -52,9 +56,9 @@ router.post('/', async (req, res, next) => {
   }
 });
 
-router.post('/token', (req, res) => {
-  const {client_id, client_secret, grant_type, code, refresh_token} = req.body;
-  if (client_id !== env.auth2ClientId || client_secret !== env.auth2ClientSecret) {
+router.post('/token', async (req, res) => {
+  const {client_id, client_secret, grant_type, code, refresh_token, username, password} = req.body;
+  if ((client_id !== env.auth2ClientId || client_secret !== env.auth2ClientSecret) && grant_type !== 'basic') {
     return sendError(res);
   }
   if (grant_type === 'authorization_code' || grant_type === 'refresh_token') {
@@ -69,6 +73,11 @@ router.post('/token', (req, res) => {
     } catch (e) {
       console.error(e);
       return sendError(res);
+    }
+  } else if (grant_type === 'basic') {
+    let isValidPassword = await checkCredentials(username, password);
+    if (isValidPassword) {
+      return res.send(auth2Response(true));
     }
   }
   return sendError(res);

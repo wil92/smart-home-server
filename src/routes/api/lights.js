@@ -24,15 +24,21 @@ router.post('/fulfillment', async (req, res) => {
   const {requestId, inputs} = req.body;
   let payload;
 
-  for (let i = 0; i < inputs.length; i++) {
-    const action = inputs[i];
-    payload = await handleAction(action);
-  }
+  try {
+    for (let i = 0; i < inputs.length; i++) {
+      const action = inputs[i];
+      payload = await handleAction(action);
+    }
 
-  res.send({
-    requestId,
-    payload
-  });
+    res.send({
+      requestId,
+      payload
+    });
+  } catch (e) {
+    console.log(e);
+    res.status(500);
+    res.send({error: e.toString()});
+  }
 });
 
 async function handleAction(action) {
@@ -55,13 +61,16 @@ async function syncAction() {
   const lights = await models.Device.find();
   return {
     agentUserId: env.googleUserId,
-    devices: lights.map(l => ({
-      id: l.did,
-      type: l.type,
-      traits: traitsByType(l.type),
-      name: l.name,
-      willReportState: false
-    }))
+    devices: lights.map((l) => {
+      const {_id, ...name} = l.name.toJSON();
+      return {
+        id: l.did,
+        type: l.type,
+        traits: traitsByType(l.type),
+        name,
+        willReportState: false
+      };
+    })
   };
 }
 
@@ -95,7 +104,7 @@ async function queryAction(action) {
       res.devices[d.id] = {
         status: 'ERROR',
         online: false,
-        errorCode: 'Device is available in the system'
+        errorCode: 'Device is not available in the system'
       };
     }
   }
@@ -155,7 +164,7 @@ async function executeAction(action) {
   }
 
   if (errors.length > 0) {
-    const commandRes = {ids: [], status: 'ERROR', errorCode: 'Device is available in the system'};
+    const commandRes = {ids: [], status: 'ERROR', errorCode: 'Device is not available in the system'};
     errors.forEach(e => commandRes.ids.push(e.id));
     payload.commands.push(commandRes);
   }
