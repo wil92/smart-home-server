@@ -1,16 +1,44 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title><%= title %></title>
-    <link rel='stylesheet' href='/stylesheets/style.css' />
-  </head>
-  <body>
-    <h1><%= title %></h1>
-    <p>Welcome to <%= title %></p>
-    <lu>
-      <% devices.forEach((light) => { %>
-        <li><% devices.did %></li>
-      <% }) %>
-    </lu>
-  </body>
+<head>
+    <title>Home</title>
+    <link rel='stylesheet' href='/stylesheets/style.css'/>
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1">
+</head>
+<body class="login-page">
+<div class="page-container">
+    <h1>Home</h1>
+    <p>dashboard</p>
+    <div class="page-body">
+        <div class="items-list">
+            <% devices.forEach((device) => { %>
+                <button class="item-device" href="#">
+                    <div class="info">
+                        <span>ID: <%= device.did %></span>
+                        <span>Name: <%= device.name.name %></span>
+                    </div>
+                    <% if (device.type === 'action.devices.types.OUTLET') { %>
+                        <div class="icon <%= device.params.on ? '' : 'off' %>">
+                            <div class="circle">
+                                <div class="rays">
+                                    <div class="r r1"></div>
+                                    <div class="r r2"></div>
+                                    <div class="r r3"></div>
+                                    <div class="r r4"></div>
+                                    <div class="r r5"></div>
+                                </div>
+                            </div>
+                            <div class="d"></div>
+                            <div class="d d1"></div>
+                            <div class="d d2"></div>
+                            <div class="d d3"></div>
+                        </div>
+                    <% } %>
+                </button>
+            <% }) %>
+        </div>
+    </div>
+</div>
+</body>
 </html>

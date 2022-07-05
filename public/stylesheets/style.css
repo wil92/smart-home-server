@@ -1,22 +1,20 @@
-body {
-  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif; }
-
 a {
   color: #00B7FF; }
 
-.login-page {
+body {
   background: #b2a9ecff;
-  margin: 0; }
-  .login-page .page-container {
+  margin: 0;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif; }
+  body .page-container {
     width: 100vw;
     height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
     margin: 0; }
-    .login-page .page-container h1 {
+    body .page-container h1, body .page-container p {
       color: #fff; }
-    .login-page .page-container .page-body {
+    body .page-container .page-body {
       display: flex;
       flex-direction: column;
       width: 100vw;
@@ -24,14 +22,43 @@ a {
       background: #fff;
       border-radius: 20px 20px 0 0;
       align-items: center; }
-      .login-page .page-container .page-body h4 {
+      body .page-container .page-body .items-list {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center; }
+        @media screen and (max-width: 424px) {
+          body .page-container .page-body .items-list .item-device {
+            width: 100% !important; } }
+        body .page-container .page-body .items-list .item-device {
+          width: 150px;
+          margin: 10px;
+          padding: 10px;
+          border: 0;
+          border-radius: 5px;
+          background: #f3ecfeff;
+          display: flex;
+          flex-direction: column;
+          align-items: center; }
+          body .page-container .page-body .items-list .item-device .info {
+            width: 100%;
+            display: flex;
+            flex-direction: column; }
+            body .page-container .page-body .items-list .item-device .info span {
+              margin-bottom: 5px;
+              font-weight: bolder;
+              color: #8479d9;
+              font-size: 12px;
+              text-align: start; }
+      body .page-container .page-body h4 {
         color: #8479d9; }
-      .login-page .page-container .page-body form {
+      body .page-container .page-body form {
         display: flex;
         flex-direction: column;
         align-items: end;
         padding-top: 10px; }
-        .login-page .page-container .page-body form button {
+        body .page-container .page-body form button {
           margin-top: 20px;
           width: fit-content;
           background: #b2a9ecff;
@@ -40,23 +67,119 @@ a {
           color: #fff;
           font-weight: bold;
           border-radius: 1px; }
-        .login-page .page-container .page-body form h5 {
+        body .page-container .page-body form h5 {
           width: 100%;
           text-align: center;
           padding: 0;
           margin: 10px 0 0 0; }
-        .login-page .page-container .page-body form label {
+        body .page-container .page-body form label {
           display: flex;
           flex-direction: column;
           margin-top: 10px; }
-          .login-page .page-container .page-body form label input {
+          body .page-container .page-body form label input {
             background: #f3ecfeff;
             border: 0;
             padding: 10px;
             border-radius: 20px;
             color: #8479d9; }
-            .login-page .page-container .page-body form label input:-webkit-autofill, .login-page .page-container .page-body form label input:-webkit-autofill:focus, .login-page .page-container .page-body form label input:-webkit-autofill:focus {
+            body .page-container .page-body form label input:-webkit-autofill, body .page-container .page-body form label input:-webkit-autofill:focus, body .page-container .page-body form label input:-webkit-autofill:focus {
               background: #f3ecfeff;
               color: #8479d9 !important; }
+
+.item-device:hover {
+  background: #b0a7c5 !important;
+  cursor: pointer; }
+  .item-device:hover .icon .circle {
+    background: #ffce78; }
+    .item-device:hover .icon .circle .rays .r {
+      background: #ffce78; }
+  .item-device:hover .icon .d::after {
+    background: #ffce78; }
+
+.icon {
+  width: 60px;
+  height: 60px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin: 2px; }
+  .icon.off .circle {
+    background: #6c6c6c; }
+    .icon.off .circle .rays {
+      display: none; }
+  .icon.off .d::after {
+    background: #6c6c6c; }
+  .icon .circle {
+    width: 50%;
+    height: 50%;
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    background: #f39c12ff;
+    border-radius: 50%;
+    z-index: 6; }
+    .icon .circle .rays {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center; }
+      .icon .circle .rays .r {
+        width: 23%;
+        height: 10%;
+        border-radius: 30% / 50%;
+        background: #f39c12ff;
+        position: absolute; }
+      .icon .circle .rays .r1 {
+        transform: translateX(-330%); }
+      .icon .circle .rays .r2 {
+        transform: rotateZ(45deg) translateX(-330%); }
+      .icon .circle .rays .r3 {
+        transform: rotateZ(90deg) translateX(-330%); }
+      .icon .circle .rays .r4 {
+        transform: rotateZ(135deg) translateX(-330%); }
+      .icon .circle .rays .r5 {
+        transform: rotateZ(180deg) translateX(-330%); }
+    .icon .circle::before {
+      position: absolute;
+      content: '';
+      width: 90%;
+      height: 90%;
+      border-radius: 50%; }
+  .icon .d {
+    position: relative;
+    width: 27.8%;
+    height: 11.5%;
+    background: #f3ecfeff;
+    border-radius: 50%;
+    margin-top: -7%;
+    display: flex;
+    z-index: 5; }
+    .icon .d::after {
+      content: '';
+      width: 100%;
+      height: 100%;
+      background: #f39c12ff;
+      border-radius: 50%;
+      margin-top: -5%; }
+  .icon .d1 {
+    width: 24.7%;
+    height: 11.5%;
+    margin-top: -6%;
+    z-index: 4; }
+  .icon .d2 {
+    width: 20.5%;
+    height: 8.3%;
+    margin-top: -5%;
+    z-index: 3; }
+  .icon .d3 {
+    width: 9.6%;
+    height: 6.5%;
+    margin-top: -4%;
+    z-index: 3; }
 
 /*# sourceMappingURL=style.css.map */

@@ -20,6 +20,7 @@ async function getApp() {
   ws.startWebSocket(server);
   await server.listen(0);
   testPort = server.address().port;
+  console.log('PORT:', testPort);
   return [app, server];
 }
 

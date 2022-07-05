@@ -7,8 +7,11 @@ router.use(isLogin);
 
 /* GET home page. */
 router.get('/', async (req, res, next) => {
-  const devices = await models.Device.find();
-  res.render('index', {title: 'Express', devices});
+  const devices = await models.Device.find({});
+  console.log(devices.map(d => d.toJSON()))
+  res.render('index', {
+    devices: devices.map(d => d.toJSON())
+  });
 });
 
 router.get('/policy', function (req, res, next) {
