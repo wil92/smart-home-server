@@ -12,4 +12,4 @@ COPY views ./views
 COPY app.js ./
 COPY .env ./
 
-CMD ["node", "bin/www"]
+CMD ["npm", "start"]
