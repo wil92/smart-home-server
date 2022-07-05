@@ -17,6 +17,7 @@
                     <div class="info">
                         <span>ID: <%= device.did %></span>
                         <span>Name: <%= device.name.name %></span>
+                        <span><%= device.online ? 'ONLINE' : 'OFFLINE' %></span>
                     </div>
                     <% if (device.type === 'action.devices.types.OUTLET') { %>
                         <div class="icon <%= device.params.on ? '' : 'off' %>">
