@@ -57,8 +57,8 @@ const ws = {
         }
 
         ws.isAlive = false;
-        console.log("ping")
-        ws.ping(null, false, true);
+        // console.log("ping")
+        ws.ping();
       });
     }, 4000);
   },
