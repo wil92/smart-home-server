@@ -4,7 +4,7 @@ const WebSocket = require("ws");
 const {filter} = require("rxjs");
 
 const env = require("../../src/environments");
-const {connectDb, dropDatabase, runMigrations} = require("../../src/models");
+const {connectDb, dropDatabase, runMigrations, models} = require("../../src/models");
 const ws = require("../../src/socket/web-socket");
 
 let testPort;
@@ -33,6 +33,12 @@ async function closeApp() {
   } catch (e) {
     console.error(e);
   }
+}
+
+async function cleanDevicesInDb() {
+  await new Promise((resolve, reject) => {
+    models.Device.deleteMany({}, (err) => err ? reject(err) : resolve());
+  });
 }
 
 async function createClient(deviceRes, onMessage = (msg) => msg) {
@@ -82,4 +88,4 @@ async function closeClient(id) {
   clients = clients.filter(c => c.did !== id);
 }
 
-module.exports = {getApp, closeApp, createClient, closeClients, closeClient};
+module.exports = {getApp, closeApp, createClient, closeClients, closeClient, cleanDevicesInDevice: cleanDevicesInDb};

@@ -68,7 +68,8 @@ async function syncAction() {
         type: l.type,
         traits: traitsByType(l.type),
         name,
-        willReportState: false
+        willReportState: willRepostStateByType(l.type),
+        attributes: attributesByType(l.type)
       };
     })
   };
@@ -92,7 +93,7 @@ async function queryAction(action) {
         res.devices[d.id] = {
           status: 'SUCCESS',
           online: true,
-          on: de.params.on
+          ...stateBytype(de)
         };
       } else {
         res.devices[d.id] = {
@@ -120,6 +121,8 @@ async function executeAction(action) {
       let commandRes;
       if (exe.command === 'action.devices.commands.OnOff') {
         commandRes = {ids: [], status: "SUCCESS", states: {on: exe.params.on, online: true}};
+      } else if (exe.command === 'action.devices.commands.StartStop') {
+        commandRes = {ids: [], status: "SUCCESS", states: {isRunning: exe.params.start, online: true}};
       } else {
         // toDo guille 16.06.22: not handle commands
         return;
@@ -174,10 +177,44 @@ async function executeAction(action) {
 
 function traitsByType(type) {
   switch (type) {
+    case 'action.devices.types.PETFEEDER':
+      return ['action.devices.traits.StartStop'];
     case 'action.devices.types.OUTLET':
       return ['action.devices.traits.OnOff'];
     default:
       return [];
+  }
+}
+
+function stateBytype(de) {
+  switch (de.type) {
+    case 'action.devices.types.PETFEEDER':
+      return {isRunning: de.params.on}
+    case 'action.devices.types.OUTLET':
+    default:
+      return {on: de.params.on}
+  }
+}
+
+function attributesByType(type) {
+  switch (type) {
+    case 'action.devices.types.PETFEEDER':
+      return {
+        pausable: false
+      };
+    case 'action.devices.types.OUTLET':
+    default:
+      return undefined;
+  }
+}
+
+function willRepostStateByType(type) {
+  switch (type) {
+    case 'action.devices.types.PETFEEDER':
+      return true;
+    case 'action.devices.types.OUTLET':
+    default:
+      return false;
   }
 }
 
