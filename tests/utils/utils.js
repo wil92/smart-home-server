@@ -88,4 +88,4 @@ async function closeClient(id) {
   clients = clients.filter(c => c.did !== id);
 }
 
-module.exports = {getApp, closeApp, createClient, closeClients, closeClient, cleanDevicesInDevice: cleanDevicesInDb};
+module.exports = {getApp, closeApp, createClient, closeClients, closeClient, cleanDevicesInDb};

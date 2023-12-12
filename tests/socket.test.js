@@ -1,14 +1,14 @@
 const request = require("supertest");
 
 const {createAccessToken} = require("../src/utils");
-const {getApp, closeApp, createClient, closeClients, cleanDevicesInDevice} = require("./utils/utils");
+const {getApp, closeApp, createClient, closeClients, cleanDevicesInDb} = require("./utils/utils");
 
 describe('WebSocket', () => {
   let app;
 
   beforeAll(async () => {
     [app] = await getApp();
-    await cleanDevicesInDevice();
+    await cleanDevicesInDb();
   });
 
   afterAll(async () => {

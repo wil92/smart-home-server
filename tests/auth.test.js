@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 
 const env = require('../src/environments')
 const {createAccessToken, createRefreshToken, createCode} = require("../src/utils");
-const {getApp, closeApp, cleanDevicesInDevice} = require('./utils/utils');
+const {getApp, closeApp, cleanDevicesInDb} = require('./utils/utils');
 
 jest.setTimeout(10000)
 
@@ -19,7 +19,7 @@ describe('Functions test', () => {
     env.auth2redirectUri = 'REDIRECT_URI';
 
     [app, server] = await getApp();
-    await cleanDevicesInDevice();
+    await cleanDevicesInDb();
   });
 
   afterAll(async () => {

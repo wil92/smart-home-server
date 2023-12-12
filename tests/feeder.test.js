@@ -2,7 +2,7 @@ const request = require('supertest');
 
 const env = require('../src/environments')
 const {createAccessToken} = require("../src/utils");
-const {getApp, closeApp, closeClients, createClient, closeClient, cleanDevicesInDevice} = require("./utils/utils");
+const {getApp, closeApp, closeClients, createClient, closeClient, cleanDevicesInDb} = require("./utils/utils");
 
 jest.setTimeout(1000000);
 
@@ -18,7 +18,7 @@ describe('Functions test', () => {
     env.googleUserId = 'AGENT_USER_ID';
 
     [app] = await getApp();
-    await cleanDevicesInDevice();
+    await cleanDevicesInDb();
   });
 
   afterAll(async () => {
