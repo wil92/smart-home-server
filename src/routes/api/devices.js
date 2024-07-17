@@ -4,6 +4,7 @@ const router = express.Router();
 const { models } = require('../../models');
 const webSocket = require('../../socket/web-socket');
 const env = require('../../environments');
+const { COMMAND_ON_OFF, COMMAND_START_STOP, DEVICE_TYPE_PETFEEDER, DEVICE_TYPE_OUTLET } = require("../../utils");
 
 router.get('/', async (req, res, next) => {
   const lights = await models.Device.find({});
@@ -82,7 +83,7 @@ async function syncAction() {
         type: l.type,
         traits: traitsByType(l.type),
         name,
-        willReportState: willRepostStateByType(l.type),
+        willReportState: willReportStateByType(l.type),
         attributes: attributesByType(l.type)
       };
     })
@@ -107,7 +108,7 @@ async function queryAction(action) {
         res.devices[d.id] = {
           status: 'SUCCESS',
           online: true,
-          ...stateBytype(de)
+          ...stateByType(de)
         };
       } else {
         res.devices[d.id] = {
@@ -133,9 +134,9 @@ async function executeAction(action) {
   for (let c of action.payload.commands) {
     for (let exe of c.execution) {
       let commandRes;
-      if (exe.command === 'action.devices.commands.OnOff') {
+      if (exe.command === COMMAND_ON_OFF) {
         commandRes = { ids: [], status: "SUCCESS", states: { on: exe.params.on, online: true } };
-      } else if (exe.command === 'action.devices.commands.StartStop') {
+      } else if (exe.command === COMMAND_START_STOP) {
         commandRes = { ids: [], status: "SUCCESS", states: { isRunning: exe.params.start, online: true } };
       } else {
         // toDo guille 16.06.22: not handle commands
@@ -143,17 +144,19 @@ async function executeAction(action) {
       }
 
       for (let d of c.devices) {
-        const existDevice = await models.Device.exist(d.id);
-        if (existDevice) {
+        let device = await models.Device.findOne({ did: d.id });
+        if (device) {
           let isConnected = webSocket.connectedDevices.has(d.id);
           if (isConnected) {
             try {
               await webSocket.sendMessageWaitResponse(d.id, {
                 payload: {
                   messageType: 'EXECUTE',
-                  command: { on: exe.params.on }
+                  command: commandToSendByType(device.type, exe)
                 }
               });
+              device = await models.Device.findOne({ did: d.id });
+              commandRes.states = { ...stateByType(device), online: true };
             } catch (e) {
               isConnected = false;
             }
@@ -189,22 +192,33 @@ async function executeAction(action) {
   return payload;
 }
 
+function commandToSendByType(type, exe) {
+  switch (type) {
+    case DEVICE_TYPE_PETFEEDER:
+      return { start: exe.params.start };
+    case DEVICE_TYPE_OUTLET:
+      return { on: exe.params.on };
+    default:
+      return {};
+  }
+}
+
 function traitsByType(type) {
   switch (type) {
-    case 'action.devices.types.PETFEEDER':
+    case DEVICE_TYPE_PETFEEDER:
       return ['action.devices.traits.StartStop'];
-    case 'action.devices.types.OUTLET':
+    case DEVICE_TYPE_OUTLET:
       return ['action.devices.traits.OnOff'];
     default:
       return [];
   }
 }
 
-function stateBytype(de) {
+function stateByType(de) {
   switch (de.type) {
-    case 'action.devices.types.PETFEEDER':
-      return { isRunning: de.params.on }
-    case 'action.devices.types.OUTLET':
+    case DEVICE_TYPE_PETFEEDER:
+      return { isRunning: de.params.isRunning }
+    case DEVICE_TYPE_OUTLET:
     default:
       return { on: de.params.on }
   }
@@ -212,21 +226,21 @@ function stateBytype(de) {
 
 function attributesByType(type) {
   switch (type) {
-    case 'action.devices.types.PETFEEDER':
+    case DEVICE_TYPE_PETFEEDER:
       return {
         pausable: false
       };
-    case 'action.devices.types.OUTLET':
+    case DEVICE_TYPE_OUTLET:
     default:
       return undefined;
   }
 }
 
-function willRepostStateByType(type) {
+function willReportStateByType(type) {
   switch (type) {
-    case 'action.devices.types.PETFEEDER':
-      return true;
-    case 'action.devices.types.OUTLET':
+    case DEVICE_TYPE_PETFEEDER:
+      return false;
+    case DEVICE_TYPE_OUTLET:
     default:
       return false;
   }

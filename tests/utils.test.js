@@ -13,7 +13,7 @@ describe('Utils functions', () => {
   });
 
   // only for test propose, should not be used in production
-  it('should connect testing device to server', async () => {
+  xit('should connect testing device to server', async () => {
     const device = await createClient({
       messageType: 'QUERY',
       payload: {

@@ -7,6 +7,12 @@ const CODE_TOKEN_TYPE = 'code';
 const REFRESH_TOKEN_TYPE = 'refresh_token';
 const ACCESS_TOKEN_TYPE = 'access_token';
 
+const COMMAND_ON_OFF = 'action.devices.commands.OnOff';
+const COMMAND_START_STOP = 'action.devices.commands.StartStop';
+
+const DEVICE_TYPE_PETFEEDER = 'action.devices.types.PETFEEDER';
+const DEVICE_TYPE_OUTLET = 'action.devices.types.OUTLET';
+
 /**
  * @param query {object}
  * @returns {string}
@@ -79,5 +85,9 @@ module.exports = {
   ACCESS_TOKEN_TYPE,
   randomText,
   hashPassword,
-  validatePassword
+  validatePassword,
+  COMMAND_ON_OFF,
+  COMMAND_START_STOP,
+  DEVICE_TYPE_PETFEEDER,
+  DEVICE_TYPE_OUTLET
 };
