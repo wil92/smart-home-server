@@ -53,7 +53,7 @@
     space.style.height = "100%";
     item.appendChild(space);
 
-    if (device.type === 'action.devices.types.OUTLET') {
+    if (true || device.type === 'action.devices.types.OUTLET') {
       const icon = document.createElement('div');
       icon.className = `icon ${device.params.on ? '' : 'off'}`;
       // html icon for a light
