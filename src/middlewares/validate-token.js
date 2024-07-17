@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const env = require('../environments');
-const {ACCESS_TOKEN_TYPE} = require("../utils");
+const { ACCESS_TOKEN_TYPE } = require("../utils");
 
 function validateToken(req, res, next) {
   if (req.headers['authorization']) {
@@ -18,7 +18,7 @@ function validateToken(req, res, next) {
     return next();
   }
   res.status(401);
-  res.send({error: 'Invalid access token'});
+  res.send({ error: 'Invalid access token' });
 }
 
 module.exports = validateToken;

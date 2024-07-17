@@ -1,27 +1,42 @@
 const express = require('express');
 const router = express.Router();
 
-const {models} = require('../../models');
+const { models } = require('../../models');
 const webSocket = require('../../socket/web-socket');
 const env = require('../../environments');
 
 router.get('/', async (req, res, next) => {
-  const lights = await models.Device.find();
+  const lights = await models.Device.find({});
+
+  for (let l of lights) {
+    l.online = webSocket.connectedDevices.has(l.did);
+  }
+
   res.send(lights);
 });
 
+router.delete('/:did', async (req, res) => {
+  return models.Device.deleteOne({ did: req.params.did })
+    .then(() => res.send(''))
+    .catch(e => {
+      console.error(e);
+      res.status(500);
+      res.send({ error: e.toString() });
+    });
+});
+
 router.post('/:lid/on', (req, res) => {
-  webSocket.sendMessage(req.params.lid, {on: true});
+  webSocket.sendMessage(req.params.lid, { on: true });
   res.send('');
 });
 
 router.post('/:lid/off', (req, res) => {
-  webSocket.sendMessage(req.params.lid, {on: false});
+  webSocket.sendMessage(req.params.lid, { on: false });
   res.send('');
 });
 
 router.post('/fulfillment', async (req, res) => {
-  const {requestId, inputs} = req.body;
+  const { requestId, inputs } = req.body;
   let payload;
 
   try {
@@ -37,7 +52,7 @@ router.post('/fulfillment', async (req, res) => {
   } catch (e) {
     console.log(e);
     res.status(500);
-    res.send({error: e.toString()});
+    res.send({ error: e.toString() });
   }
 });
 
@@ -57,12 +72,11 @@ async function handleAction(action) {
 }
 
 async function syncAction() {
-  // const lights = Array.from(data.lights);
   const lights = await models.Device.find();
   return {
     agentUserId: env.googleUserId,
     devices: lights.map((l) => {
-      const {_id, ...name} = l.name.toJSON();
+      const { _id, ...name } = l.name.toJSON();
       return {
         id: l.did,
         type: l.type,
@@ -76,20 +90,20 @@ async function syncAction() {
 }
 
 async function queryAction(action) {
-  const res = {devices: {}};
+  const res = { devices: {} };
   for (let d of action.payload.devices) {
     const existDevice = await models.Device.exist(d.id);
     if (existDevice) {
       let isConnected = webSocket.connectedDevices.has(d.id);
       if (isConnected) {
         try {
-          await webSocket.sendMessageWaitResponse(d.id, {payload: {messageType: 'QUERY'}});
+          await webSocket.sendMessageWaitResponse(d.id, { payload: { messageType: 'QUERY' } });
         } catch (ignore) {
           isConnected = false;
         }
       }
       if (isConnected) {
-        const de = await models.Device.findOne({did: d.id});
+        const de = await models.Device.findOne({ did: d.id });
         res.devices[d.id] = {
           status: 'SUCCESS',
           online: true,
@@ -113,16 +127,16 @@ async function queryAction(action) {
 }
 
 async function executeAction(action) {
-  const payload = {commands: []}
+  const payload = { commands: [] }
   const errors = [];
   const offlines = [];
   for (let c of action.payload.commands) {
     for (let exe of c.execution) {
       let commandRes;
       if (exe.command === 'action.devices.commands.OnOff') {
-        commandRes = {ids: [], status: "SUCCESS", states: {on: exe.params.on, online: true}};
+        commandRes = { ids: [], status: "SUCCESS", states: { on: exe.params.on, online: true } };
       } else if (exe.command === 'action.devices.commands.StartStop') {
-        commandRes = {ids: [], status: "SUCCESS", states: {isRunning: exe.params.start, online: true}};
+        commandRes = { ids: [], status: "SUCCESS", states: { isRunning: exe.params.start, online: true } };
       } else {
         // toDo guille 16.06.22: not handle commands
         return;
@@ -137,7 +151,7 @@ async function executeAction(action) {
               await webSocket.sendMessageWaitResponse(d.id, {
                 payload: {
                   messageType: 'EXECUTE',
-                  command: {on: exe.params.on}
+                  command: { on: exe.params.on }
                 }
               });
             } catch (e) {
@@ -161,13 +175,13 @@ async function executeAction(action) {
   }
 
   if (offlines.length > 0) {
-    const commandRes = {ids: [], status: 'OFFLINE', states: {online: false}};
+    const commandRes = { ids: [], status: 'OFFLINE', states: { online: false } };
     offlines.forEach(e => commandRes.ids.push(e.id));
     payload.commands.push(commandRes);
   }
 
   if (errors.length > 0) {
-    const commandRes = {ids: [], status: 'ERROR', errorCode: 'Device is not available in the system'};
+    const commandRes = { ids: [], status: 'ERROR', errorCode: 'Device is not available in the system' };
     errors.forEach(e => commandRes.ids.push(e.id));
     payload.commands.push(commandRes);
   }
@@ -189,10 +203,10 @@ function traitsByType(type) {
 function stateBytype(de) {
   switch (de.type) {
     case 'action.devices.types.PETFEEDER':
-      return {isRunning: de.params.on}
+      return { isRunning: de.params.on }
     case 'action.devices.types.OUTLET':
     default:
-      return {on: de.params.on}
+      return { on: de.params.on }
   }
 }
 

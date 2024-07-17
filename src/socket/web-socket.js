@@ -1,8 +1,8 @@
-const {WebSocketServer} = require("ws");
+const { WebSocketServer } = require("ws");
 
-const {randomText} = require("../utils");
-const {Subject, timer, filter, first, takeUntil, tap} = require("rxjs");
-const {models} = require("../models");
+const { randomText } = require("../utils");
+const { Subject, timer, filter, first, takeUntil, tap } = require("rxjs");
+const { models } = require("../models");
 
 let wss, intervalId;
 
@@ -19,8 +19,11 @@ const ws = {
     return new Promise(resolve => wss.close(resolve));
   },
 
-  startWebSocket: (server) => {
-    wss = new WebSocketServer({server});
+  startWebSocket: async (server) => {
+    wss = new WebSocketServer({ server });
+
+    // update all devices to off
+    await models.Device.updateMany({}, { params: { on: false } });
 
     wss.on('connection', (ws) => {
       console.log('NEW CONNECTION');
@@ -28,7 +31,7 @@ const ws = {
 
       ws.on('pong', function () {
         console.log('pong')
-        this.isAlive=true;
+        this.isAlive = true;
       });
 
       ws.on('message', async (message) => {
@@ -84,7 +87,7 @@ const ws = {
 
     wss.clients.forEach(ws => {
       if (ws.lid === id) {
-        ws.send(JSON.stringify({...message, mid}));
+        ws.send(JSON.stringify({ ...message, mid }));
       }
     });
 

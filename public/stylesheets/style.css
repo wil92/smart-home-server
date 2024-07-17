@@ -34,6 +34,16 @@ body {
         @media screen and (max-width: 424px) {
           body .page-container .page-body .items-list .item-device {
             width: 100% !important; } }
+        body .page-container .page-body .items-list .removeButton {
+          background: #ff4d4d;
+          color: #fff;
+          border: 0;
+          padding: 5px 10px;
+          font-weight: bold;
+          border-radius: 1px;
+          margin-top: 10px; }
+          body .page-container .page-body .items-list .removeButton:hover {
+            background: #ff0000; }
         body .page-container .page-body .items-list .item-device {
           width: 150px;
           margin: 10px;
@@ -89,6 +99,43 @@ body {
               background: #f3ecfeff;
               color: #8479d9 !important; }
 
+.dialog-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #00000096; }
+  .dialog-container .dialog {
+    padding: 10px;
+    background: #fff; }
+    .dialog-container .dialog .dialog-content {
+      text-align: end; }
+      .dialog-container .dialog .dialog-content button:first-of-type {
+        background: #ff4d4d;
+        color: #fff;
+        border: 0;
+        padding: 5px 10px;
+        font-weight: bold;
+        border-radius: 1px;
+        margin-top: 10px;
+        margin-right: 10px; }
+        .dialog-container .dialog .dialog-content button:first-of-type:hover {
+          background: #ff0000; }
+      .dialog-container .dialog .dialog-content button:last-of-type {
+        background: #b2a9ecff;
+        color: #fff;
+        border: 0;
+        padding: 5px 10px;
+        font-weight: bold;
+        border-radius: 1px;
+        margin-top: 10px; }
+        .dialog-container .dialog .dialog-content button:last-of-type:hover {
+          background: #8479d9; }
+
 .item-device:hover {
   background: #b0a7c5 !important;
   cursor: pointer; }
@@ -102,6 +149,7 @@ body {
 .icon {
   width: 60px;
   height: 60px;
+  min-height: 60px;
   display: flex;
   flex-direction: column;
   align-items: center;

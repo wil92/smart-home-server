@@ -12,34 +12,101 @@
     <p>dashboard (<a href="/auth/logout">logout</a>)</p>
     <div class="page-body">
         <div class="items-list">
-            <% devices.forEach((device) => { %>
-                <button class="item-device" href="#">
-                    <div class="info">
-                        <span>ID: <%= device.did %></span>
-                        <span>Name: <%= device.name.name %></span>
-                        <span><%= device.online ? 'ONLINE' : 'OFFLINE' %></span>
-                    </div>
-                    <% if (device.type === 'action.devices.types.OUTLET') { %>
-                        <div class="icon <%= device.params.on ? '' : 'off' %>">
-                            <div class="circle">
-                                <div class="rays">
-                                    <div class="r r1"></div>
-                                    <div class="r r2"></div>
-                                    <div class="r r3"></div>
-                                    <div class="r r4"></div>
-                                    <div class="r r5"></div>
-                                </div>
-                            </div>
-                            <div class="d"></div>
-                            <div class="d d1"></div>
-                            <div class="d d2"></div>
-                            <div class="d d3"></div>
-                        </div>
-                    <% } %>
-                </button>
-            <% }) %>
         </div>
     </div>
 </div>
+<script>
+  function removeDevice(did) {
+    fetch('/api/devices/' + did, {
+      method: 'DELETE',
+    }).then(() => {
+      return getDevices();
+    });
+  }
+
+  function getDevices() {
+    return fetch('/api/devices/', {
+      method: 'GET',
+    }).then((res) => {
+      return res.json();
+    }).then(devices => {
+      const itemsList = document.querySelector('.items-list');
+      itemsList.innerHTML = '';
+      devices.forEach(device => createHtmlDeviceElement(device, itemsList));
+    });
+  }
+
+  function createHtmlDeviceElement(device, itemsList) {
+    const item = document.createElement('div');
+    item.className = "item-device";
+
+    const info = document.createElement('div');
+    info.className = "info";
+    info.innerHTML = `
+      <span>ID: ${device.did}</span>
+      <span>Name: ${device.name.name}</span>
+      <span>${device.online ? 'ONLINE' : 'OFFLINE'}</span>
+    `;
+    item.appendChild(info);
+
+    const space = document.createElement('div');
+    space.style.height = "100%";
+    item.appendChild(space);
+
+    if (device.type === 'action.devices.types.OUTLET') {
+      const icon = document.createElement('div');
+      icon.className = `icon ${device.params.on ? '' : 'off'}`;
+      // html icon for a light
+      icon.innerHTML = `
+        <div class="circle">
+          <div class="rays">
+            <div class="r r1"></div>
+            <div class="r r2"></div>
+            <div class="r r3"></div>
+            <div class="r r4"></div>
+            <div class="r r5"></div>
+          </div>
+        </div>
+        <div class="d"></div>
+        <div class="d d1"></div>
+        <div class="d d2"></div>
+        <div class="d d3"></div>
+      `;
+      item.appendChild(icon);
+    }
+
+    const button = document.createElement('button');
+    button.onclick = () => openRemoveDialog(device.did);
+    button.innerHTML = `remove`;
+    button.className = "removeButton";
+    item.appendChild(button);
+
+    itemsList.appendChild(item);
+  }
+
+  function openRemoveDialog(did) {
+    const dialog = document.createElement('div');
+    dialog.className = "dialog-container";
+    dialog.innerHTML = `
+      <div class="dialog">
+        <div class="dialog-content">
+          <h2>Are you sure you want to remove this device?</h2>
+          <button onclick="removeDevice('${did}');this.parentElement.parentElement.parentElement.remove();">Yes</button>
+          <button onclick="this.parentElement.parentElement.parentElement.remove()">No</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(dialog);
+  }
+
+  (function () {
+    getDevices();
+
+    setInterval(() => {
+      getDevices();
+    }, 5000);
+  })();
+
+</script>
 </body>
 </html>

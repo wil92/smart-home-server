@@ -44,6 +44,18 @@ body
           .item-device
             width: 100% !important
 
+        .removeButton
+          background: #ff4d4d
+          color: #fff
+          border: 0
+          padding: 5px 10px
+          font-weight: bold
+          border-radius: 1px
+          margin-top: 10px
+
+          &:hover
+            background: #ff0000
+
         .item-device
           width: 150px
           margin: 10px
@@ -59,6 +71,7 @@ body
             width: 100%
             display: flex
             flex-direction: column
+
             span
               margin-bottom: 5px
               font-weight: bolder
@@ -107,6 +120,49 @@ body
               background: #f3ecfeff
               color: #8479d9 !important
 
+.dialog-container
+  position: absolute
+  top: 0
+  left: 0
+  bottom: 0
+  right: 0
+  display: flex
+  justify-content: center
+  align-items: center
+  background-color: #00000096
+
+  .dialog
+    padding: 10px
+    background: #fff
+
+    .dialog-content
+      text-align: end
+
+      button:first-of-type
+        background: #ff4d4d
+        color: #fff
+        border: 0
+        padding: 5px 10px
+        font-weight: bold
+        border-radius: 1px
+        margin-top: 10px
+        margin-right: 10px
+
+        &:hover
+          background: #ff0000
+
+      button:last-of-type
+        background: #b2a9ecff
+        color: #fff
+        border: 0
+        padding: 5px 10px
+        font-weight: bold
+        border-radius: 1px
+        margin-top: 10px
+
+        &:hover
+          background: #8479d9
+
 // this is the light icon with css
 $icon-color: #f39c12ff
 $icon-color-off: #6c6c6c
@@ -117,12 +173,15 @@ $icon-size: 60px
 .item-device:hover
   background: #b0a7c5 !important
   cursor: pointer
+
   .icon
     .circle
       background: $icon-color-hover
+
       .rays
         .r
           background: $icon-color-hover
+
     .d
       &::after
         background: $icon-color-hover
@@ -130,6 +189,7 @@ $icon-size: 60px
 .icon
   width: $icon-size
   height: $icon-size
+  min-height: $icon-size
   // background: red
   display: flex
   flex-direction: column
@@ -141,8 +201,10 @@ $icon-size: 60px
   &.off
     .circle
       background: $icon-color-off
+
       .rays
         display: none
+
     .d
       &::after
         background: $icon-color-off

@@ -11,6 +11,7 @@ const models = { User, Device };
 
 const connectDb = async () => {
   const dbUrl = `mongodb://${env.dbHost}:${env.dbPort}/${env.dbName}`;
+  mongoose.set('strictQuery', false);
   return mongoose.connect(dbUrl);
 };
 

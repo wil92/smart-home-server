@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const lightsRouter = require('./lights');
+const devicesRouter = require('./devices');
 const validateToken = require("../../middlewares/validate-token");
 
 router.use(validateToken);
-router.use('/lights', lightsRouter);
+router.use('/lights', devicesRouter); // deprecated
+router.use('/devices', devicesRouter);
 
 module.exports = router;

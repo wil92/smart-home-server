@@ -41,7 +41,7 @@ async function cleanDevicesInDb() {
   });
 }
 
-async function createClient(deviceRes, onMessage = (msg) => msg) {
+async function createClient(deviceRes, onMessage = (msg) => msg, websocketPort = testPort) {
   deviceRes = {
     mid: '',
     messageType: 'QUERY',
@@ -53,7 +53,7 @@ async function createClient(deviceRes, onMessage = (msg) => msg) {
     },
     ...deviceRes
   };
-  const wsc = new WebSocket.WebSocket(`ws://localhost:${testPort}`);
+  const wsc = new WebSocket.WebSocket(`ws://localhost:${websocketPort}`);
   wsc.on('message', (data) => {
     let msg = JSON.parse(data);
     msg = onMessage(msg);
