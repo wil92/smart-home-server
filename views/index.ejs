@@ -55,7 +55,7 @@
 
     if (true || device.type === 'action.devices.types.OUTLET') {
       const icon = document.createElement('div');
-      icon.className = `icon ${device.params.on ? '' : 'off'}`;
+      icon.className = `icon ${device.params.on || device.params.isRunning ? '' : 'off'}`;
       // html icon for a light
       icon.innerHTML = `
         <div class="circle">
