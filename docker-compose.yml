@@ -9,8 +9,8 @@ services:
     ports:
       - "127.0.0.1:${PORT}:${PORT}"
     networks:
-      - blogdb
+      - homedb
 
 networks:
-  blogdb:
+  homedb:
     external: true
