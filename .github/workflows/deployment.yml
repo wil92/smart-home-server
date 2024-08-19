@@ -27,7 +27,7 @@ jobs:
           echo "DB_HOST=${{ secrets.DB_HOST }}" >> .env
 
       - name: Copy project to the hosting
-        uses: easingthemes/ssh-deploy@v2.1.5
+        uses: easingthemes/ssh-deploy@main
         env:
           SSH_PRIVATE_KEY: ${{ secrets.SERVER_SSH_KEY }}
           ARGS: "-rltgoDzvO --delete"
