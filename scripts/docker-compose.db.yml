@@ -1,0 +1,9 @@
+version: "2.4"
+
+services:
+  db:
+    image: mongo:7.0.12
+    container_name: "smart_home_db"
+    restart: always
+    ports:
+      - "27017:27017"
