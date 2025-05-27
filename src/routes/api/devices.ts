@@ -191,7 +191,7 @@ async function executeAction(action: Action) {
                 }
               } as WSMessageResponse);
               device = await models.Device.findOne({ did: d.id });
-              commandRes.states = { ...(await stateByType(device)), online: true };
+              commandRes.states = { ...(await stateByType(device, true)), online: true };
             } catch (e) {
               isConnected = false;
             }
@@ -253,12 +253,14 @@ function traitsByType(type: string): string[] {
   }
 }
 
-async function stateByType(de: IDevice | any) {
+async function stateByType(de: IDevice | any, waitFirstImage: boolean = false) {
   switch (de.type) {
     case DEVICE_TYPE_CAMERA:
-      await firstValueFrom(webSocket.incomeMessages.pipe(
-          filter((msg: WSMessage) => msg.payload.id === de.did && msg.messageType === 'JSON'))
-      );
+      if (waitFirstImage) {
+        await firstValueFrom(webSocket.incomeMessages.pipe(
+            filter((msg: WSMessage) => msg.payload.id === de.did && msg.messageType === 'JSON'))
+        );
+      }
       return {
         cameraStreamAccessUrl: `${env.apiHost}/stream/hls/${de.did}.m3u8`,
         cameraStreamProtocol: 'hls',
