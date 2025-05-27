@@ -1,13 +1,13 @@
-const request = require('supertest');
+import request from 'supertest';
 
-const env = require('../src/environments')
-const { createAccessToken } = require("../src/utils");
-const { getApp, closeApp, closeClients, createClient, closeClient, cleanDevicesInDb } = require("./utils/utils");
+import env from '../src/environments';
+import {createAccessToken} from "../src/utils";
+import {getApp, closeApp, closeClients, createClient, cleanDevicesInDb} from "./utils/utils";
 
 jest.setTimeout(1000000);
 
 describe('Functions test', () => {
-  let app;
+  let app: any;
   const googleUserId = 'AGENT_USER_ID';
 
   beforeAll(async () => {
@@ -91,7 +91,7 @@ describe('Functions test', () => {
   });
 
   it('should response to the EXECUTE request', async () => {
-    const onMessage = (msg) => {
+    const onMessage = (msg: any) => {
       expect(msg.payload.messageType).toEqual('EXECUTE');
       expect(msg.payload.command).toBeTruthy();
       expect(msg.payload.command.start).toEqual(true);
@@ -134,7 +134,7 @@ describe('Functions test', () => {
     expect(res.body.payload.commands[1].errorCode).toEqual("Device is not available in the system");
   });
 
-  async function connectDevices(onMessage = (msg) => msg) {
+  async function connectDevices(onMessage = (msg: any) => msg) {
     await createClient({
       messageType: 'QUERY',
       payload: {

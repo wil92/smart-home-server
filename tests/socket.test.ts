@@ -1,10 +1,10 @@
-const request = require("supertest");
+import request from "supertest";
 
-const {createAccessToken} = require("../src/utils");
-const {getApp, closeApp, createClient, closeClients, cleanDevicesInDb} = require("./utils/utils");
+import {createAccessToken} from "../src/utils";
+import {getApp, closeApp, createClient, closeClients, cleanDevicesInDb} from "./utils/utils";
 
 describe('WebSocket', () => {
-  let app;
+  let app: any;
 
   beforeAll(async () => {
     [app] = await getApp();

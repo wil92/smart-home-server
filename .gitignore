@@ -1,3 +1,7 @@
 .env
 node_modules
 .idea
+
+# related to stream
+public/stream/*
+!public/stream/.gitkeep

@@ -9,7 +9,7 @@ COPY bin ./bin
 COPY public ./public
 COPY src ./src
 COPY views ./views
-COPY app.js ./
+COPY app.ts ./
 COPY .env ./
 
 CMD ["npm", "start"]

@@ -1,13 +1,13 @@
-const request = require('supertest');
+import request from 'supertest';
 
-const env = require('../src/environments')
-const {createAccessToken, createRefreshToken} = require("../src/utils");
-const {getApp, closeApp, closeClients, createClient, closeClient, cleanDevicesInDb} = require("./utils/utils");
+import env from '../src/environments';
+import {createAccessToken, createRefreshToken} from "../src/utils";
+import {getApp, closeApp, closeClients, createClient, closeClient, cleanDevicesInDb} from "./utils/utils";
 
 jest.setTimeout(1000000);
 
 describe('Functions test', () => {
-  let app;
+  let app: any;
 
   beforeAll(async () => {
     env.username = 'test';

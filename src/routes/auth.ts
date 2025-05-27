@@ -1,24 +1,17 @@
-const express = require('express');
-const jwt = require('jsonwebtoken');
+import express from 'express';
+import jwt from 'jsonwebtoken';
 
-const {
-  queryToStr,
-  createCode,
-  auth2Response,
-  CODE_TOKEN_TYPE,
-  REFRESH_TOKEN_TYPE,
-  validatePassword
-} = require("../utils");
-const env = require('../environments');
-const {models} = require('../models');
+import {queryToStr, createCode, auth2Response, CODE_TOKEN_TYPE, REFRESH_TOKEN_TYPE, validatePassword} from "../utils";
+import env from '../environments';
+import {models} from '../models';
 
 const router = express.Router();
 
-router.get('/', async (req, res, next) => {
+router.get('/', async (req, res, _next) => {
   res.render('login', {title: 'LogIn', query: queryToStr(req.query), error: null});
 });
 
-async function checkCredentials(username, password) {
+async function checkCredentials(username: string, password: string) {
   const user = await models.User.findOne({username});
   if (!!user) {
     return await validatePassword(password, user.password);
@@ -26,7 +19,7 @@ async function checkCredentials(username, password) {
   return false;
 }
 
-router.post('/', async (req, res, next) => {
+router.post('/', async (req: any, res, _next) => {
   const {username, password} = req.body;
   let isValidPassword = await checkCredentials(username, password);
   if (!isValidPassword) {
@@ -64,7 +57,7 @@ router.post('/token', async (req, res) => {
   if (grant_type === 'authorization_code' || grant_type === 'refresh_token') {
     const token = grant_type === 'authorization_code' ? code : refresh_token;
     try {
-      const payload = jwt.verify(token, env.key);
+      const payload: any = jwt.verify(token, env.key);
       if ((grant_type === 'authorization_code' && payload.type !== CODE_TOKEN_TYPE) ||
         (grant_type === 'refresh_token' && payload.type !== REFRESH_TOKEN_TYPE)) {
         throw new Error('Invalid token');
@@ -83,14 +76,14 @@ router.post('/token', async (req, res) => {
   return sendError(res);
 });
 
-function sendError(res) {
+function sendError(res: any) {
   res.status(400);
   return res.send({error: 'invalid_grant'});
 }
 
-router.get('/logout', (req, res) => {
+router.get('/logout', (req: any, res) => {
   req.session['isLogin'] = false;
   res.redirect('/auth');
 });
 
-module.exports = router;
+export default router;

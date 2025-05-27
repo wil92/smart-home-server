@@ -1,21 +1,21 @@
-const fs = require('fs');
-const path = require('path');
-const mongoose = require('mongoose');
+import fs from 'fs';
+import path from 'path';
+import mongoose from 'mongoose';
 
-const User = require('./user');
-const Version = require('./version');
-const Device = require('./device');
-const env = require('../environments');
+import User from './user';
+import Version from './version';
+import Device from './device';
+import env from '../environments';
 
-const models = { User, Device };
+export const models = { User, Device };
 
-const connectDb = async () => {
+export const connectDb = async () => {
   const dbUrl = `mongodb://${env.dbHost}:${env.dbPort}/${env.dbName}`;
   mongoose.set('strictQuery', false);
   return mongoose.connect(dbUrl);
 };
 
-const runMigrations = async () => {
+export const runMigrations = async () => {
   const migrationsDir = path.join(__dirname, 'migrations');
   const migrations = fs.readdirSync(migrationsDir);
   migrations.sort();
@@ -35,13 +35,6 @@ const runMigrations = async () => {
   }
 };
 
-const dropDatabase = async () => {
+export const dropDatabase = async () => {
   await mongoose.connection.db.dropDatabase();
 };
-
-module.exports = {
-  connectDb,
-  models,
-  runMigrations,
-  dropDatabase
-}

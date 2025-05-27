@@ -1,16 +1,16 @@
-const createError = require('http-errors');
-const express = require('express');
-const path = require('path');
-const cookieParser = require('cookie-parser');
-const cookieSession = require('cookie-session');
-const logger = require('morgan');
-const sassMiddleware = require('node-sass-middleware');
+import createError from 'http-errors';
+import express from 'express';
+import path from 'path';
+import cookieParser from 'cookie-parser';
+import cookieSession from 'cookie-session';
+import logger from 'morgan';
+import sassMiddleware from 'node-sass-middleware';
 
-const indexRouter = require('./src/routes/index');
-const apiRouter = require('./src/routes/api');
-const authRouter = require('./src/routes/auth');
+import indexRouter from './src/routes/index';
+import apiRouter from './src/routes/api';
+import authRouter from './src/routes/auth';
 
-const env = require('./src/environments');
+import env from './src/environments';
 const app = express();
 
 // view engine setup
@@ -39,12 +39,12 @@ app.use('/auth', authRouter);
 app.use('/api', apiRouter);
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use((_req, _res, next) => {
   next(createError(404));
 });
 
 // error handler
-app.use(function(err, req, res, next) {
+app.use(function(err: any, req: any, res: any, _next: any) {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
@@ -54,4 +54,4 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
-module.exports = app;
+export default app;

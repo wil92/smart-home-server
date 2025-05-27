@@ -1,47 +1,48 @@
-const http = require("http");
-const mongoose = require("mongoose");
-const WebSocket = require("ws");
-const {filter} = require("rxjs");
+import http from "http";
+import mongoose from "mongoose";
+import WebSocket from "ws";
+import {filter} from "rxjs";
 
-const env = require("../../src/environments");
-const {connectDb, dropDatabase, runMigrations, models} = require("../../src/models");
-const ws = require("../../src/socket/web-socket");
+import env from "../../src/environments";
+import {connectDb, dropDatabase, runMigrations, models} from "../../src/models";
+import wepSocketInstance from "../../src/socket/web-socket";
 
-let testPort;
-let server;
-let clients = [];
+import app from "../../app";
 
-async function getApp() {
+let testPort: number;
+let server: any;
+let clients: any[] = [];
+
+export async function getApp() {
   env.dbName = 'testdb';
   await connectDb();
   await runMigrations();
-  const app = require('../../app');
   server = http.createServer(app);
-  ws.startWebSocket(server);
+  wepSocketInstance.startWebSocket(server);
   await server.listen(0);
   testPort = server.address().port;
   console.log('PORT:', testPort);
   return [app, server];
 }
 
-async function closeApp() {
+export async function closeApp() {
   try {
     await dropDatabase();
     await mongoose.connection.close();
-    await ws.stop();
+    await wepSocketInstance.stop();
     await new Promise(resolve => server.close(resolve));
   } catch (e) {
     console.error(e);
   }
 }
 
-async function cleanDevicesInDb() {
+export async function cleanDevicesInDb() {
   await new Promise((resolve, reject) => {
-    models.Device.deleteMany({}, (err) => err ? reject(err) : resolve());
+    models.Device.deleteMany({}, (err) => err ? reject(err) : resolve({}));
   });
 }
 
-async function createClient(deviceRes, onMessage = (msg) => msg, websocketPort = testPort) {
+export async function createClient(deviceRes: any, onMessage = (msg: any) => msg, websocketPort = testPort) {
   deviceRes = {
     mid: '',
     messageType: 'QUERY',
@@ -53,8 +54,8 @@ async function createClient(deviceRes, onMessage = (msg) => msg, websocketPort =
     },
     ...deviceRes
   };
-  const wsc = new WebSocket.WebSocket(`ws://localhost:${websocketPort}`);
-  wsc.on('message', (data) => {
+  const wsc: any = new WebSocket.WebSocket(`ws://localhost:${websocketPort}`);
+  wsc.on('message', (data: any) => {
     let msg = JSON.parse(data);
     msg = onMessage(msg);
     deviceRes = {...deviceRes, payload: {...deviceRes.payload, ...msg.payload.command}};
@@ -64,22 +65,22 @@ async function createClient(deviceRes, onMessage = (msg) => msg, websocketPort =
     console.log('sent initial status')
     wsc.send(JSON.stringify(deviceRes));
   });
-  await new Promise(resolve => ws.incomeMessages
-    .pipe(filter(m => m.payload.id === deviceRes.payload.id))
-    .subscribe(() => resolve()));
+  await new Promise(resolve => wepSocketInstance.incomeMessages
+    .pipe(filter((m: any) => m.payload.id === deviceRes.payload.id))
+    .subscribe(() => resolve({})));
   wsc.did = deviceRes.payload.id;
   clients.push(wsc);
   return wsc;
 }
 
-async function closeClients() {
+export async function closeClients() {
   for (const c of clients) {
     await c.close();
   }
   clients = [];
 }
 
-async function closeClient(id) {
+export async function closeClient(id: string) {
   for (const c of clients) {
     if (c.did === id) {
       await c.close();
@@ -87,5 +88,3 @@ async function closeClient(id) {
   }
   clients = clients.filter(c => c.did !== id);
 }
-
-module.exports = {getApp, closeApp, createClient, closeClients, closeClient, cleanDevicesInDb};

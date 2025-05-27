@@ -1,22 +1,23 @@
-const express = require('express');
+import express from 'express';
+
+import {models} from '../../models';
+import webSocket from '../../socket/web-socket';
+import env from '../../environments';
+import {COMMAND_ON_OFF, COMMAND_START_STOP, DEVICE_TYPE_PETFEEDER, DEVICE_TYPE_OUTLET} from '../../utils';
+
 const router = express.Router();
 
-const { models } = require('../../models');
-const webSocket = require('../../socket/web-socket');
-const env = require('../../environments');
-const { COMMAND_ON_OFF, COMMAND_START_STOP, DEVICE_TYPE_PETFEEDER, DEVICE_TYPE_OUTLET } = require("../../utils");
-
 router.get('/', async (req, res, next) => {
-  const lights = await models.Device.find({});
+  const devices  = await models.Device.find({}) as unknown as any;
 
-  for (let l of lights) {
-    l.online = webSocket.connectedDevices.has(l.did);
+  for (let device of devices) {
+    device.online = webSocket.connectedDevices.has(device.did);
   }
 
-  res.send(lights);
+  res.send(devices);
 });
 
-router.delete('/:did', async (req, res) => {
+router.delete('/:did', async (req: any, res: any) => {
   return models.Device.deleteOne({ did: req.params.did })
     .then(() => res.send(''))
     .catch(e => {
@@ -50,14 +51,14 @@ router.post('/fulfillment', async (req, res) => {
       requestId,
       payload
     });
-  } catch (e) {
+  } catch (e: any) {
     console.log(e);
     res.status(500);
     res.send({ error: e.toString() });
   }
 });
 
-async function handleAction(action) {
+async function handleAction(action: any) {
   switch (action['intent']) {
     case 'action.devices.SYNC':
       return await syncAction();
@@ -73,10 +74,10 @@ async function handleAction(action) {
 }
 
 async function syncAction() {
-  const lights = await models.Device.find();
+  const devices = await models.Device.find();
   return {
     agentUserId: env.googleUserId,
-    devices: lights.map((l) => {
+    devices: devices.map((l: any) => {
       const { _id, ...name } = l.name.toJSON();
       return {
         id: l.did,
@@ -90,8 +91,8 @@ async function syncAction() {
   };
 }
 
-async function queryAction(action) {
-  const res = { devices: {} };
+async function queryAction(action: any) {
+  const res: {devices: any} = { devices: {} };
   for (let d of action.payload.devices) {
     const existDevice = await models.Device.exist(d.id);
     if (existDevice) {
@@ -127,13 +128,13 @@ async function queryAction(action) {
   return res;
 }
 
-async function executeAction(action) {
-  const payload = { commands: [] }
+async function executeAction(action: any) {
+  const payload: {commands: any[]} = { commands: [] }
   const errors = [];
   const offlines = [];
   for (let c of action.payload.commands) {
     for (let exe of c.execution) {
-      let commandRes;
+      let commandRes: { ids: string[], status: string, states?: any, errorCode?: string } = { ids: [], status: 'ERROR' };
       if (exe.command === COMMAND_ON_OFF) {
         commandRes = { ids: [], status: "SUCCESS", states: { on: exe.params.on, online: true } };
       } else if (exe.command === COMMAND_START_STOP) {
@@ -178,13 +179,13 @@ async function executeAction(action) {
   }
 
   if (offlines.length > 0) {
-    const commandRes = { ids: [], status: 'OFFLINE', states: { online: false } };
-    offlines.forEach(e => commandRes.ids.push(e.id));
+    const commandRes: {ids: any[], status: string, states: {online: boolean}} = { ids: [], status: 'OFFLINE', states: { online: false } };
+    offlines.forEach((e: {id: string})=> commandRes.ids.push(e.id));
     payload.commands.push(commandRes);
   }
 
   if (errors.length > 0) {
-    const commandRes = { ids: [], status: 'ERROR', errorCode: 'Device is not available in the system' };
+    const commandRes: {ids: any[], status: string, errorCode: string} = { ids: [], status: 'ERROR', errorCode: 'Device is not available in the system' };
     errors.forEach(e => commandRes.ids.push(e.id));
     payload.commands.push(commandRes);
   }
@@ -192,7 +193,7 @@ async function executeAction(action) {
   return payload;
 }
 
-function commandToSendByType(type, exe) {
+function commandToSendByType(type: string, exe: any) {
   switch (type) {
     case DEVICE_TYPE_PETFEEDER:
       return { start: exe.params.start };
@@ -203,7 +204,7 @@ function commandToSendByType(type, exe) {
   }
 }
 
-function traitsByType(type) {
+function traitsByType(type: string): string[] {
   switch (type) {
     case DEVICE_TYPE_PETFEEDER:
       return ['action.devices.traits.StartStop'];
@@ -214,7 +215,7 @@ function traitsByType(type) {
   }
 }
 
-function stateByType(de) {
+function stateByType(de: any) {
   switch (de.type) {
     case DEVICE_TYPE_PETFEEDER:
       return { isRunning: de.params.isRunning }
@@ -224,7 +225,7 @@ function stateByType(de) {
   }
 }
 
-function attributesByType(type) {
+function attributesByType(type: string): { pausable?: boolean } | undefined {
   switch (type) {
     case DEVICE_TYPE_PETFEEDER:
       return {
@@ -236,7 +237,7 @@ function attributesByType(type) {
   }
 }
 
-function willReportStateByType(type) {
+function willReportStateByType(type: string): boolean {
   switch (type) {
     case DEVICE_TYPE_PETFEEDER:
       return false;
@@ -246,4 +247,4 @@ function willReportStateByType(type) {
   }
 }
 
-module.exports = router;
+export default router;

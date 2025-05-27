@@ -1,5 +1,5 @@
-const {randomText, createAccessToken} = require("../src/utils");
-const { createClient } = require("./utils/utils");
+import {randomText, createAccessToken} from "../src/utils";
+import {createClient} from "./utils/utils";
 
 describe('Utils functions', () => {
   it('should expect a random text of size 10', () => {

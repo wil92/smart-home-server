@@ -7,12 +7,13 @@ if (process.env.NODE_ENV !== 'test') {
 /**
  * Module dependencies.
  */
+import app from '../app';
+import debug0 from "debug";
+import http from 'http';
+import wepSocketInstance from "../src/socket/web-socket";
+import {connectDb} from '../src/models';
 
-const app = require('../app');
-const webSocket = require('../src/socket/web-socket');
-const debug = require('debug')('smart-home-server:server');
-const http = require('http');
-const {connectDb} = require('../src/models');
+const debug = debug0('smart-home-server:server');
 
 /**
  * Get port from environment and store in Express.
@@ -33,14 +34,13 @@ connectDb().then(async () => {
   server.listen(port);
   server.on('error', onError);
   server.on('listening', onListening);
-  webSocket.startWebSocket(server);
+  wepSocketInstance.startWebSocket(server);
 });
 
 /**
  * Normalize a port into a number, string, or false.
  */
-
-function normalizePort(val) {
+function normalizePort(val: any): number | string | false {
   const port = parseInt(val, 10);
 
   if (isNaN(port)) {
@@ -60,7 +60,7 @@ function normalizePort(val) {
  * Event listener for HTTP server "error" event.
  */
 
-function onError(error) {
+function onError(error: any) {
   if (error.syscall !== 'listen') {
     throw error;
   }
@@ -92,6 +92,6 @@ function onListening() {
   const addr = server.address();
   const bind = typeof addr === 'string'
     ? 'pipe ' + addr
-    : 'port ' + addr.port;
+    : 'port ' + addr?.port;
   debug('Listening on ' + bind);
 }

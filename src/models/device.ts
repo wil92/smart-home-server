@@ -1,7 +1,24 @@
-const mongoose = require('mongoose');
-const {Schema} = require("mongoose");
+import mongoose from 'mongoose';
+import {Schema} from 'mongoose';
 
-const deviceSchema = new mongoose.Schema(
+interface IDevice {
+  did: string;
+  params: {
+    on: boolean;
+    isRunning: boolean;
+  };
+  type: string;
+  name: {
+    name: string;
+  };
+}
+
+interface DeviceModel extends mongoose.Model<IDevice> {
+  updateOrCreate(deviceRes: any): Promise<IDevice>;
+  exist(id: string): Promise<boolean>;
+}
+
+const deviceSchema = new mongoose.Schema<IDevice, DeviceModel>(
   {
     did: {
       type: String,
@@ -38,6 +55,6 @@ deviceSchema.statics.exist = async function (id) {
   return !!device;
 }
 
-const Device = mongoose.model('Device', deviceSchema);
+const Device = mongoose.model<IDevice, DeviceModel>('Device', deviceSchema);
 
-module.exports = Device;
+export default Device;

@@ -1,6 +1,6 @@
-const jwt = require('jsonwebtoken');
+import jwt from 'jsonwebtoken';
 
-const {hashPassword, validatePassword} = require("../src/utils");
+import {hashPassword, validatePassword} from "../src/utils";
 
 describe('Functions test', () => {
   const TEST_KEY = '5FucJT6D46LXBt8';

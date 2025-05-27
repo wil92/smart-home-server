@@ -14,4 +14,4 @@ const env = {
   dbName: process.env.DB_NAME || 'smarthome',
 };
 
-module.exports = env;
+export default env;

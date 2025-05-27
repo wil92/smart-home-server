@@ -1,15 +1,15 @@
-const request = require('supertest');
-const url = require('url');
-const jwt = require('jsonwebtoken');
+import request from 'supertest';
+import url from 'url';
+import jwt from 'jsonwebtoken';
 
-const env = require('../src/environments')
-const {createAccessToken, createRefreshToken, createCode} = require("../src/utils");
-const {getApp, closeApp, cleanDevicesInDb} = require('./utils/utils');
+import env from '../src/environments';
+import {createAccessToken, createRefreshToken, createCode} from "../src/utils";
+import {getApp, closeApp, cleanDevicesInDb} from './utils/utils';
 
 jest.setTimeout(10000)
 
 describe('Functions test', () => {
-  let app, server;
+  let app: any, server: any;
 
   beforeAll(async () => {
     env.username = 'test';
@@ -27,14 +27,16 @@ describe('Functions test', () => {
   });
 
   it('should get login and redirected to home', async () => {
-    const res = await request(server).post('/auth')
+    console.log('---')
+    const res = await request(app).post('/auth')
         .expect(302)
         .send({username: 'test', password: 'test'});
+    console.log('333')
     expect(res.headers.location).toEqual('/');
   });
 
   it('should get login and redirected to home', async () => {
-    const res = await request(server).post('/auth/token')
+    const res = await request(app).post('/auth/token')
         .expect(200)
         .send({
           grant_type: 'basic',
@@ -57,7 +59,7 @@ describe('Functions test', () => {
     const urlObj = url.parse(res.headers.location, true);
     expect(urlObj.query.state).toEqual('STATE_STRING');
     expect(urlObj.query.code).toBeTruthy();
-    jwt.verify(urlObj.query.code, env.key);
+    jwt.verify(urlObj.query.code as string, env.key);
 
     // Get refresh token with the authorization code
     const res2 = await request(app).post('/auth/token')
@@ -66,7 +68,7 @@ describe('Functions test', () => {
         client_id: 'GOOGLE_CLIENT_ID',
         client_secret: 'GOOGLE_CLIENT_SECRET',
         grant_type: 'authorization_code',
-        code: encodeURI(urlObj.query.code),
+        code: encodeURI(urlObj.query.code as string),
         redirect_uri: 'REDIRECT_URI'
       });
     expect(res2.body['token_type']).toEqual('Bearer');

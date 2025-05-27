@@ -1,12 +1,12 @@
-const jwt = require('jsonwebtoken');
-const env = require('../environments');
-const { ACCESS_TOKEN_TYPE } = require("../utils");
+import jwt from 'jsonwebtoken';
+import env from '../environments';
+import {ACCESS_TOKEN_TYPE} from "../utils";
 
-function validateToken(req, res, next) {
+function validateToken(req: any, res: any, next: any) {
   if (req.headers['authorization']) {
     try {
       const token = req.headers['authorization'].replace(/^Bearer /, '');
-      const payload = jwt.verify(token, env.key);
+      const payload: any = jwt.verify(token, env.key);
       if (payload.type !== ACCESS_TOKEN_TYPE) {
         throw new Error('Invalid token');
       }
@@ -21,4 +21,4 @@ function validateToken(req, res, next) {
   res.send({ error: 'Invalid access token' });
 }
 
-module.exports = validateToken;
+export default validateToken;
