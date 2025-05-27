@@ -25,6 +25,7 @@ jobs:
           echo "SH_AUTH2_REDIRECT_URI=${{ secrets.AUTH2_REDIRECT_URI }}" >> .env
           echo "SH_GOOGLE_USER_ID=${{ secrets.GOOGLE_USER_ID }}" >> .env
           echo "DB_HOST=${{ secrets.DB_HOST }}" >> .env
+          echo "API_HOST=${{ secrets.API_HOST }}" >> .env
 
       - name: Copy project to the hosting
         uses: easingthemes/ssh-deploy@main
