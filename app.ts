@@ -9,6 +9,7 @@ import sassMiddleware from 'node-sass-middleware';
 import indexRouter from './src/routes/index';
 import apiRouter from './src/routes/api';
 import authRouter from './src/routes/auth';
+import streamRouter from './src/routes/api/stream';
 
 import env from './src/environments';
 const app = express();
@@ -34,6 +35,7 @@ app.use(sassMiddleware({
 }));
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use('/stream', streamRouter);
 app.use('/', indexRouter);
 app.use('/auth', authRouter);
 app.use('/api', apiRouter);

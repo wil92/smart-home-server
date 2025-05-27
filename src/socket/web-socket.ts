@@ -1,6 +1,9 @@
 import {WebSocketServer} from "ws";
+import path from "path";
+import fs from "fs";
 
 import {Subject, timer, filter, first, takeUntil, tap} from "rxjs";
+import ffmpeg from "fluent-ffmpeg";
 
 import {randomText} from "../utils";
 import {models} from "../models";
@@ -8,7 +11,29 @@ import {Server} from "node:http";
 
 let wss: WebSocketServer | undefined = undefined, intervalId: number;
 
-const incomeMessages = new Subject();
+export interface WSMessage {
+    mid: string;
+    messageType: string;
+    payload: {
+        id: string;
+        on: boolean;
+        type: string;
+        name: { name: string };
+    };
+}
+
+export interface WSMessageResponse {
+    payload: {
+        messageType: string;
+        command?: {
+            on?: boolean;
+            start?: boolean;
+        }
+    };
+    mid?: string;
+}
+
+const incomeMessages = new Subject<WSMessage>();
 const connectedDevices = new Set();
 
 const wepSocketInstance = {
@@ -37,13 +62,9 @@ const wepSocketInstance = {
             });
 
             ws.on('message', async (message: any) => {
-                console.log(message.toString());
-
                 try {
-                    /**
-                     * @type {{ mid: string, messageType: string, payload: {id: string, on: boolean, type: string, name: {name: string}}} | any}
-                     */
                     const messageObj = JSON.parse(message.toString());
+                    console.log("JSON");
 
                     await models.Device.updateOrCreate(messageObj);
                     connectedDevices.add(messageObj.payload.id);
@@ -51,7 +72,42 @@ const wepSocketInstance = {
 
                     incomeMessages.next(messageObj);
                 } catch (err) {
-                    console.error(err);
+                    // handle jpg file
+                    console.log("JPG");
+                    const streamDirectory = path.join(__dirname, '../../public/stream');
+                    const streamFile = path.join(streamDirectory, ws.lid + '.jpg');
+                    const hlsFile = path.join(streamDirectory, ws.lid + '.m3u8');
+
+                    fs.writeFileSync(streamFile, message);
+
+                    try {
+                        await new Promise((resolve, reject) => {
+                            ffmpeg(streamFile, {}).addOption([
+                                '-loop 1',
+                                // '-c:v libx264',
+                                // '-tune zerolatency',
+                                '-pix_fmt yuv420p',
+                                '-start_number 0',
+                                '-hls_time 10',
+                                '-hls_list_size 0',
+                                '-hls_flags delete_segments',
+                                '-f hls'
+                            ]).output(hlsFile).on('end', (res, err) => {
+                                // console.log('aaa')
+                                if (err) {
+                                    return reject(err);
+                                }
+                                resolve(res);
+                            }).run();
+                            // console.log('bbbb', hlsFile)
+                        });
+                    } catch (e) {
+                        // console.error('ERROR', e);
+                    }
+                    incomeMessages.next({
+                        messageType: "JSON",
+                        payload: {id: ws.lid}
+                    } as WSMessage);
                 }
             });
         });
@@ -71,13 +127,13 @@ const wepSocketInstance = {
         }, 4000);
     },
 
-    async sendMessageWaitResponse(id: string, message: any) {
+    async sendMessageWaitResponse(id: string, message: WSMessageResponse) {
         const mid = this.sendMessage(id, message);
 
         return new Promise((resolve, reject) => {
             incomeMessages
                 .pipe(
-                    filter((m: any) => m.mid === mid),
+                    filter((m: WSMessage) => m.mid === mid),
                     first(),
                     takeUntil(timer(1000).pipe(tap(() => reject()))),
                 )
@@ -87,12 +143,12 @@ const wepSocketInstance = {
         });
     },
 
-    sendMessage: (id: string, message: any) => {
+    sendMessage: (id: string, message: WSMessageResponse) => {
         const mid = randomText(20);
 
         wss?.clients.forEach((ws: any) => {
             if (ws.lid === id) {
-                ws.send(JSON.stringify({...message, mid}));
+                ws.send(JSON.stringify({...message, mid} as WSMessageResponse));
             }
         });
 

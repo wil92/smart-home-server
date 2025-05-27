@@ -9,8 +9,10 @@ export const ACCESS_TOKEN_TYPE = 'access_token';
 
 export const COMMAND_ON_OFF = 'action.devices.commands.OnOff';
 export const COMMAND_START_STOP = 'action.devices.commands.StartStop';
+export const COMMAND_GET_CAMERA_STREAM = 'action.devices.commands.GetCameraStream';
 
 export const DEVICE_TYPE_PETFEEDER = 'action.devices.types.PETFEEDER';
+export const DEVICE_TYPE_CAMERA = 'action.devices.types.CAMERA';
 export const DEVICE_TYPE_OUTLET = 'action.devices.types.OUTLET';
 
 /**

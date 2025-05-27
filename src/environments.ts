@@ -12,6 +12,8 @@ const env = {
   dbHost: process.env.DB_HOST || 'localhost',
   dbPort: process.env.DB_PORT || 27017,
   dbName: process.env.DB_NAME || 'smarthome',
+
+  apiHost: process.env.API_HOST || 'http://localhost',
 };
 
 export default env;

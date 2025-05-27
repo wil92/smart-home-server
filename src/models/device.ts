@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import {Schema} from 'mongoose';
 
-interface IDevice {
+export interface IDevice {
   did: string;
   params: {
     on: boolean;

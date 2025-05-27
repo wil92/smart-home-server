@@ -1,9 +1,17 @@
 import express from 'express';
 
 import {models} from '../../models';
-import webSocket from '../../socket/web-socket';
+import webSocket, {WSMessage, WSMessageResponse} from '../../socket/web-socket';
 import env from '../../environments';
-import {COMMAND_ON_OFF, COMMAND_START_STOP, DEVICE_TYPE_PETFEEDER, DEVICE_TYPE_OUTLET} from '../../utils';
+import {
+  COMMAND_ON_OFF,
+  COMMAND_START_STOP,
+  DEVICE_TYPE_PETFEEDER,
+  DEVICE_TYPE_OUTLET,
+  DEVICE_TYPE_CAMERA, COMMAND_GET_CAMERA_STREAM
+} from '../../utils';
+import Device, {IDevice} from "../../models/device";
+import {filter, firstValueFrom} from "rxjs";
 
 const router = express.Router();
 
@@ -28,12 +36,12 @@ router.delete('/:did', async (req: any, res: any) => {
 });
 
 router.post('/:lid/on', (req, res) => {
-  webSocket.sendMessage(req.params.lid, { on: true });
+  webSocket.sendMessage(req.params.lid, { payload: {command: {on: true}, messageType: 'EXECUTE'} } as WSMessageResponse);
   res.send('');
 });
 
 router.post('/:lid/off', (req, res) => {
-  webSocket.sendMessage(req.params.lid, { on: false });
+  webSocket.sendMessage(req.params.lid, { payload: {command: {on: false}, messageType: 'EXECUTE'} } as WSMessageResponse);
   res.send('');
 });
 
@@ -58,7 +66,30 @@ router.post('/fulfillment', async (req, res) => {
   }
 });
 
-async function handleAction(action: any) {
+interface Action {
+  intent: 'action.devices.DISCONNECT' | 'action.devices.SYNC' | 'action.devices.QUERY' | 'action.devices.EXECUTE';
+  payload: {
+    commands?: {
+      devices: {
+        id: string;
+      }[];
+      execution: {
+        command: string;
+        params: {
+          start?: boolean;
+          on?: boolean;
+          StreamToChromecast?: boolean;
+          SupportedStreamProtocols?: string[];
+        };
+      }[];
+    }[];
+    devices?: {
+      id: string;
+    }[];
+  }
+}
+
+async function handleAction(action: Action) {
   switch (action['intent']) {
     case 'action.devices.SYNC':
       return await syncAction();
@@ -91,15 +122,15 @@ async function syncAction() {
   };
 }
 
-async function queryAction(action: any) {
+async function queryAction(action: Action) {
   const res: {devices: any} = { devices: {} };
-  for (let d of action.payload.devices) {
+  for (let d of action.payload?.devices || []) {
     const existDevice = await models.Device.exist(d.id);
     if (existDevice) {
       let isConnected = webSocket.connectedDevices.has(d.id);
       if (isConnected) {
         try {
-          await webSocket.sendMessageWaitResponse(d.id, { payload: { messageType: 'QUERY' } });
+          await webSocket.sendMessageWaitResponse(d.id, { payload: { messageType: 'QUERY' } } as WSMessageResponse);
         } catch (ignore) {
           isConnected = false;
         }
@@ -109,7 +140,7 @@ async function queryAction(action: any) {
         res.devices[d.id] = {
           status: 'SUCCESS',
           online: true,
-          ...stateByType(de)
+          ...(await stateByType(de))
         };
       } else {
         res.devices[d.id] = {
@@ -118,6 +149,7 @@ async function queryAction(action: any) {
         };
       }
     } else {
+      console.log('11111111111111111111111')
       res.devices[d.id] = {
         status: 'ERROR',
         online: false,
@@ -128,17 +160,19 @@ async function queryAction(action: any) {
   return res;
 }
 
-async function executeAction(action: any) {
+async function executeAction(action: Action) {
   const payload: {commands: any[]} = { commands: [] }
   const errors = [];
   const offlines = [];
-  for (let c of action.payload.commands) {
+  for (let c of action.payload?.commands || []) {
     for (let exe of c.execution) {
       let commandRes: { ids: string[], status: string, states?: any, errorCode?: string } = { ids: [], status: 'ERROR' };
       if (exe.command === COMMAND_ON_OFF) {
         commandRes = { ids: [], status: "SUCCESS", states: { on: exe.params.on, online: true } };
       } else if (exe.command === COMMAND_START_STOP) {
         commandRes = { ids: [], status: "SUCCESS", states: { isRunning: exe.params.start, online: true } };
+      } else if (exe.command === COMMAND_GET_CAMERA_STREAM) {
+        commandRes = { ids: [], status: "SUCCESS", states: { online: true } };
       } else {
         // toDo guille 16.06.22: not handle commands
         return;
@@ -155,9 +189,9 @@ async function executeAction(action: any) {
                   messageType: 'EXECUTE',
                   command: commandToSendByType(device.type, exe)
                 }
-              });
+              } as WSMessageResponse);
               device = await models.Device.findOne({ did: d.id });
-              commandRes.states = { ...stateByType(device), online: true };
+              commandRes.states = { ...(await stateByType(device)), online: true };
             } catch (e) {
               isConnected = false;
             }
@@ -193,14 +227,16 @@ async function executeAction(action: any) {
   return payload;
 }
 
-function commandToSendByType(type: string, exe: any) {
+function commandToSendByType(type: string, exe: any): any {
   switch (type) {
     case DEVICE_TYPE_PETFEEDER:
       return { start: exe.params.start };
     case DEVICE_TYPE_OUTLET:
       return { on: exe.params.on };
+    case DEVICE_TYPE_CAMERA:
+      return {on: exe.params.StreamToChromecast};
     default:
-      return {};
+      return {} as WSMessageResponse;
   }
 }
 
@@ -210,23 +246,42 @@ function traitsByType(type: string): string[] {
       return ['action.devices.traits.StartStop'];
     case DEVICE_TYPE_OUTLET:
       return ['action.devices.traits.OnOff'];
+    case DEVICE_TYPE_CAMERA:
+      return ['action.devices.traits.CameraStream'];
     default:
       return [];
   }
 }
 
-function stateByType(de: any) {
+async function stateByType(de: IDevice | any) {
   switch (de.type) {
+    case DEVICE_TYPE_CAMERA:
+      await firstValueFrom(webSocket.incomeMessages.pipe(
+          filter((msg: WSMessage) => msg.payload.id === de.did && msg.messageType === 'JSON'))
+      );
+      return {
+        cameraStreamAccessUrl: `${env.apiHost}/stream/hls/${de.did}.m3u8`,
+        cameraStreamProtocol: 'hls',
+        // cameraStreamAuthToken: 'some-auth-token',
+        // cameraStreamReceiverAppId: 'some-app-id',
+      };
     case DEVICE_TYPE_PETFEEDER:
       return { isRunning: de.params.isRunning }
     case DEVICE_TYPE_OUTLET:
-    default:
       return { on: de.params.on }
+    default:
+      return {};
   }
 }
 
-function attributesByType(type: string): { pausable?: boolean } | undefined {
+function attributesByType(type: string): any {
   switch (type) {
+    case DEVICE_TYPE_CAMERA:
+      return {
+        cameraStreamSupportedProtocols: ['hls'],
+        cameraStreamNeedAuthToken: false,
+        cameraStreamNeedDrmEncryption: false,
+      };
     case DEVICE_TYPE_PETFEEDER:
       return {
         pausable: false
@@ -239,8 +294,9 @@ function attributesByType(type: string): { pausable?: boolean } | undefined {
 
 function willReportStateByType(type: string): boolean {
   switch (type) {
+    case DEVICE_TYPE_CAMERA:
+      return true;
     case DEVICE_TYPE_PETFEEDER:
-      return false;
     case DEVICE_TYPE_OUTLET:
     default:
       return false;
