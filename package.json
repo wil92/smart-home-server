@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "npm run migrate && ts-node bin/www.ts",
-    "dev": "npm run migrate && nodemon bin/www.ts",
+    "dev": "npm run migrate && nodemon --exec ts-node bin/www.ts",
     "migrate": "ts-node bin/migrate.ts",
     "test": "NODE_ENV=test && jest --maxWorkers=1"
   },
