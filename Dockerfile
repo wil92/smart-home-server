@@ -11,5 +11,6 @@ COPY src ./src
 COPY views ./views
 COPY app.ts ./
 COPY .env ./
+COPY tsconfig.json ./
 
 CMD ["npm", "start"]
