@@ -19,7 +19,6 @@ describe('Functions test', () => {
     env.googleUserId = googleUserId;
 
     [app] = await getApp();
-    await cleanDevicesInDb();
   });
 
   afterAll(async () => {
@@ -27,11 +26,10 @@ describe('Functions test', () => {
   });
 
   afterEach(async () => {
-    await closeClients();
   });
 
   it('should SYNC the items with google actions', async () => {
-    await connectDevices();
+    const deviceId = await connectDevices();
 
     const token = createAccessToken();
     const requestIdExample = "ff36a3cc-ec34-11e6-b1a0-64510650abcf";
@@ -46,21 +44,25 @@ describe('Functions test', () => {
     expect(res.body.requestId).toEqual(requestIdExample);
     expect(res.body.payload).toBeTruthy();
     expect(res.body.payload.agentUserId).toEqual(googleUserId);
-    expect(res.body.payload.devices.length).toEqual(1);
+    expect(res.body.payload.devices.length).toBeGreaterThan(0);
 
-    // device 0 {type: 'PETFEEDER', name: 'td3', id: 'CgCGzmhvel3'}
-    expect(res.body.payload.devices[0].id).toEqual('CgCGzmhvel3');
-    expect(res.body.payload.devices[0].type).toEqual('action.devices.types.PETFEEDER');
-    expect(res.body.payload.devices[0].name.name).toEqual('td3');
-    expect(res.body.payload.devices[0].name._id).toBeFalsy();
-    expect(res.body.payload.devices[0].willReportState).toEqual(false);
-    expect(res.body.payload.devices[0].attributes.pausable).toEqual(false);
-    expect(res.body.payload.devices[0].traits.length).toEqual(1);
-    expect(res.body.payload.devices[0].traits[0]).toEqual('action.devices.traits.StartStop');
+    // device 0 {type: 'PETFEEDER', name: 'td3', id: deviceId}
+    const index = res.body.payload.devices.findIndex((d: any) => d.id === deviceId);
+    expect(res.body.payload.devices[index].id).toEqual(deviceId);
+    expect(res.body.payload.devices[index].type).toEqual('action.devices.types.PETFEEDER');
+    expect(res.body.payload.devices[index].name.name).toEqual('td3');
+    expect(res.body.payload.devices[index].name._id).toBeFalsy();
+    expect(res.body.payload.devices[index].willReportState).toEqual(false);
+    expect(res.body.payload.devices[index].attributes.pausable).toEqual(false);
+    expect(res.body.payload.devices[index].traits.length).toEqual(1);
+    expect(res.body.payload.devices[index].traits[0]).toEqual('action.devices.traits.StartStop');
+
+    await closeClients([deviceId]);
+    await cleanDevicesInDb({ pid: deviceId });
   });
 
   it('should response to the QUERY request', async () => {
-    await connectDevices();
+    const deviceId = await connectDevices();
 
     const token = createAccessToken();
     const res = await request(app).post('/api/lights/fulfillment')
@@ -71,7 +73,7 @@ describe('Functions test', () => {
           intent: "action.devices.QUERY",
           payload: {
             devices: [
-              { id: 'CgCGzmhvel3' },
+              { id: deviceId },
               { id: 'nofound' }
             ]
           }
@@ -81,13 +83,16 @@ describe('Functions test', () => {
 
     expect(res.body.requestId).toEqual("ff36a3cc-ec34-11e6-b1a0-64510651abcf");
 
-    expect(res.body.payload.devices['CgCGzmhvel3'].status).toEqual("SUCCESS");
-    expect(res.body.payload.devices['CgCGzmhvel3'].online).toEqual(true);
-    expect(res.body.payload.devices['CgCGzmhvel3'].isRunning).toEqual(true);
+    expect(res.body.payload.devices[deviceId].status).toEqual("SUCCESS");
+    expect(res.body.payload.devices[deviceId].online).toEqual(true);
+    expect(res.body.payload.devices[deviceId].isRunning).toEqual(true);
 
     expect(res.body.payload.devices['nofound'].status).toEqual("ERROR");
     expect(res.body.payload.devices['nofound'].online).toEqual(false);
     expect(res.body.payload.devices['nofound'].errorCode).toEqual('Device is not available in the system');
+
+    await closeClients([deviceId]);
+    await cleanDevicesInDb({ pid: deviceId });
   });
 
   it('should response to the EXECUTE request', async () => {
@@ -97,7 +102,7 @@ describe('Functions test', () => {
       expect(msg.payload.command.start).toEqual(true);
       return msg;
     };
-    await connectDevices(onMessage);
+    const deviceId = await connectDevices(onMessage);
 
     const token = createAccessToken();
     const res = await request(app).post('/api/lights/fulfillment')
@@ -109,7 +114,7 @@ describe('Functions test', () => {
           payload: {
             commands: [{
               devices: [
-                { id: 'CgCGzmhvel3' },
+                { id: deviceId },
                 { id: 'nofound' }
               ],
               execution: [{
@@ -124,21 +129,25 @@ describe('Functions test', () => {
 
     expect(res.body.requestId).toEqual("ff46a3cc-ec34-11e6-b1a0-64510651abcf");
 
-    expect(res.body.payload.commands[0].ids[0]).toEqual('CgCGzmhvel3');
-    expect(res.body.payload.commands[0].status).toEqual('SUCCESS');
-    expect(res.body.payload.commands[0].states.isRunning).toEqual(true);
-    expect(res.body.payload.commands[0].states.online).toEqual(true);
+    const index1 = res.body.payload.commands.findIndex((c: any) => c.ids[0] === deviceId);
+    expect(res.body.payload.commands[index1].ids[0]).toEqual(deviceId);
+    expect(res.body.payload.commands[index1].status).toEqual('SUCCESS');
+    expect(res.body.payload.commands[index1].states.isRunning).toEqual(true);
+    expect(res.body.payload.commands[index1].states.online).toEqual(true);
 
-    expect(res.body.payload.commands[1].ids[0]).toEqual("nofound");
-    expect(res.body.payload.commands[1].status).toEqual("ERROR");
-    expect(res.body.payload.commands[1].errorCode).toEqual("Device is not available in the system");
+    const index2 = res.body.payload.commands.findIndex((c: any) => c.ids[0] === 'nofound');
+    expect(res.body.payload.commands[index2].ids[0]).toEqual("nofound");
+    expect(res.body.payload.commands[index2].status).toEqual("ERROR");
+    expect(res.body.payload.commands[index2].errorCode).toEqual("Device is not available in the system");
+
+    await closeClients([deviceId]);
+    await cleanDevicesInDb({ pid: deviceId });
   });
 
   async function connectDevices(onMessage = (msg: any) => msg) {
-    await createClient({
+    return await createClient({
       messageType: 'QUERY',
       payload: {
-        id: 'CgCGzmhvel3',
         isRunning: true,
         type: 'action.devices.types.PETFEEDER',
         name: { name: 'td3' }

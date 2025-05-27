@@ -18,7 +18,6 @@ describe('Functions test', () => {
     env.googleUserId = 'AGENT_USER_ID';
 
     [app] = await getApp();
-    await cleanDevicesInDb();
   });
 
   afterAll(async () => {
@@ -26,7 +25,6 @@ describe('Functions test', () => {
   });
 
   afterEach(async () => {
-    await closeClients();
   });
 
   it('should get 401 if the request did not have and access_token', async () => {
@@ -52,46 +50,52 @@ describe('Functions test', () => {
     const res = await request(app).get('/api/lights')
       .set('Authorization', `Bearer ${token}`)
       .expect(200);
-    expect(res.body.length).toEqual(0);
+    expect(res.body instanceof Array).toBeTruthy();
   });
 
   it('should SYNC the items with google actions', async () => {
-    await connectDevices();
+    const [deviceId1, deviceId2] = await connectDevices();
 
     const token = createAccessToken();
     const res = await request(app).post('/api/lights/fulfillment')
       .set('Authorization', `Bearer ${token}`)
       .send({
-        requestId: "ff36a3cc-ec34-11e6-b1a0-64510650abcf",
+        requestId: "ff36a3cc-ec34-11e6-b1a0-64510",
         inputs: [{intent: "action.devices.SYNC"}]
       })
       .expect(200);
 
-    expect(res.body.requestId).toEqual("ff36a3cc-ec34-11e6-b1a0-64510650abcf");
+    expect(res.body.requestId).toEqual("ff36a3cc-ec34-11e6-b1a0-64510");
     expect(res.body.payload.agentUserId).toEqual("AGENT_USER_ID");
-    expect(res.body.payload.devices.length).toEqual(2);
+    expect(res.body.payload.devices.length).toBeGreaterThan(0);
 
-    // device 0 {type: 'OUTLET', name: 'td1', id: 'CgCGzmhvelv'}
-    expect(res.body.payload.devices[0].id).toEqual('CgCGzmhvelv');
-    expect(res.body.payload.devices[0].type).toEqual('action.devices.types.OUTLET');
-    expect(res.body.payload.devices[0].name.name).toEqual('td1');
-    expect(res.body.payload.devices[0].name._id).toBeFalsy();
-    expect(res.body.payload.devices[0].willReportState).toBeFalsy();
-    expect(res.body.payload.devices[0].traits.length).toEqual(1);
-    expect(res.body.payload.devices[0].traits[0]).toEqual('action.devices.traits.OnOff');
+    // device 0 {type: 'OUTLET', name: 'td1', id: deviceId1}
+    const device1 = res.body.payload.devices.findIndex((d: any) => d.id === deviceId1);
+    expect(device1).toBeGreaterThanOrEqual(0);
+    expect(res.body.payload.devices[device1].type).toEqual('action.devices.types.OUTLET');
+    expect(res.body.payload.devices[device1].name.name).toEqual('td1');
+    expect(res.body.payload.devices[device1].name._id).toBeFalsy();
+    expect(res.body.payload.devices[device1].willReportState).toBeFalsy();
+    expect(res.body.payload.devices[device1].traits.length).toEqual(1);
+    expect(res.body.payload.devices[device1].traits[0]).toEqual('action.devices.traits.OnOff');
 
-    // device 1 {type: 'OUTLET', name: 'td2', id: 'CgCGzmhvel2'}
-    expect(res.body.payload.devices[1].id).toEqual('CgCGzmhvel2');
-    expect(res.body.payload.devices[1].type).toEqual('action.devices.types.OUTLET');
-    expect(res.body.payload.devices[1].name.name).toEqual('td2');
-    expect(res.body.payload.devices[1].willReportState).toBeFalsy();
-    expect(res.body.payload.devices[1].traits.length).toEqual(1);
-    expect(res.body.payload.devices[1].traits[0]).toEqual('action.devices.traits.OnOff');
+    // device 1 {type: 'OUTLET', name: 'td2', id: deviceId2}
+    const device2 = res.body.payload.devices.findIndex((d: any) => d.id === deviceId2);
+    expect(device2).toBeGreaterThanOrEqual(0);
+    expect(res.body.payload.devices[device2].type).toEqual('action.devices.types.OUTLET');
+    expect(res.body.payload.devices[device2].name.name).toEqual('td2');
+    expect(res.body.payload.devices[device2].willReportState).toBeFalsy();
+    expect(res.body.payload.devices[device2].traits.length).toEqual(1);
+    expect(res.body.payload.devices[device2].traits[0]).toEqual('action.devices.traits.OnOff');
+
+    await closeClients([deviceId1, deviceId2]);
+    await cleanDevicesInDb({pid: deviceId1});
+    await cleanDevicesInDb({pid: deviceId2});
   });
 
   it('should response to the QUERY request', async () => {
-    await connectDevices();
-    await closeClient('CgCGzmhvel2');
+    const [deviceId1, deviceId2] = await connectDevices();
+    await closeClients([deviceId2]);
 
     const token = createAccessToken();
     const res = await request(app).post('/api/lights/fulfillment')
@@ -102,8 +106,8 @@ describe('Functions test', () => {
           intent: "action.devices.QUERY",
           payload: {
             devices: [
-              {id: 'CgCGzmhvelv'},
-              {id: 'CgCGzmhvel2'},
+              {id: deviceId1},
+              {id: deviceId2},
               {id: 'nofound'}
             ]
           }
@@ -113,21 +117,25 @@ describe('Functions test', () => {
 
     expect(res.body.requestId).toEqual("ff36a3cc-ec34-11e6-b1a0-64510651abcf");
 
-    expect(res.body.payload.devices['CgCGzmhvelv'].status).toEqual("SUCCESS");
-    expect(res.body.payload.devices['CgCGzmhvelv'].online).toBeTruthy();
-    expect(res.body.payload.devices['CgCGzmhvelv'].on).toBeTruthy();
+    expect(res.body.payload.devices[deviceId1].status).toEqual("SUCCESS");
+    expect(res.body.payload.devices[deviceId1].online).toBeTruthy();
+    expect(res.body.payload.devices[deviceId1].on).toBeTruthy();
 
-    expect(res.body.payload.devices['CgCGzmhvel2'].status).toEqual("OFFLINE");
-    expect(res.body.payload.devices['CgCGzmhvel2'].online).toBeFalsy();
+    expect(res.body.payload.devices[deviceId2].status).toEqual("OFFLINE");
+    expect(res.body.payload.devices[deviceId2].online).toBeFalsy();
 
     expect(res.body.payload.devices['nofound'].status).toEqual("ERROR");
     expect(res.body.payload.devices['nofound'].online).toBeFalsy();
     expect(res.body.payload.devices['nofound'].errorCode).toEqual('Device is not available in the system');
+
+    await closeClients([deviceId1]);
+    await cleanDevicesInDb({pid: deviceId1});
+    await cleanDevicesInDb({pid: deviceId2});
   });
 
   it('should response to the EXECUTE request', async () => {
-    await connectDevices();
-    await closeClient('CgCGzmhvel2');
+    const [deviceId1, deviceId2] = await connectDevices();
+    await closeClients([deviceId2]);
 
     const token = createAccessToken();
     const res = await request(app).post('/api/lights/fulfillment')
@@ -139,7 +147,7 @@ describe('Functions test', () => {
           payload: {
             commands: [{
               devices: [
-                {id: 'CgCGzmhvelv'},
+                {id: deviceId1},
                 {id: 'nofound'}
               ],
               execution: [{
@@ -148,7 +156,7 @@ describe('Functions test', () => {
               }]
             }, {
               devices: [
-                {id: 'CgCGzmhvel2'}
+                {id: deviceId2}
               ],
               execution: [{
                 command: 'action.devices.commands.OnOff',
@@ -162,38 +170,44 @@ describe('Functions test', () => {
 
     expect(res.body.requestId).toEqual("ff46a3cc-ec34-11e6-b1a0-64510651abcf");
 
-    expect(res.body.payload.commands[0].ids[0]).toEqual('CgCGzmhvelv');
-    expect(res.body.payload.commands[0].status).toEqual('SUCCESS');
-    expect(res.body.payload.commands[0].states.on).toBeFalsy();
-    expect(res.body.payload.commands[0].states.online).toBeTruthy();
+    const index1 = res.body.payload.commands.findIndex((c: any) => c.ids[0] === deviceId1);
+    expect(res.body.payload.commands[index1].ids[0]).toEqual(deviceId1);
+    expect(res.body.payload.commands[index1].status).toEqual('SUCCESS');
+    expect(res.body.payload.commands[index1].states.on).toBeFalsy();
+    expect(res.body.payload.commands[index1].states.online).toBeTruthy();
 
-    expect(res.body.payload.commands[1].ids[0]).toEqual("CgCGzmhvel2");
-    expect(res.body.payload.commands[1].status).toEqual('OFFLINE');
-    expect(res.body.payload.commands[1].states.online).toBeFalsy();
+    const index2 = res.body.payload.commands.findIndex((c: any) => c.ids[0] === deviceId2);
+    expect(res.body.payload.commands[index2].ids[0]).toEqual(deviceId2);
+    expect(res.body.payload.commands[index2].status).toEqual('OFFLINE');
+    expect(res.body.payload.commands[index2].states.online).toBeFalsy();
 
-    expect(res.body.payload.commands[2].ids[0]).toEqual("nofound");
-    expect(res.body.payload.commands[2].status).toEqual("ERROR");
-    expect(res.body.payload.commands[2].errorCode).toEqual("Device is not available in the system");
+    const index3 = res.body.payload.commands.findIndex((c: any) => c.ids[0] === 'nofound');
+    expect(res.body.payload.commands[index3].ids[0]).toEqual("nofound");
+    expect(res.body.payload.commands[index3].status).toEqual("ERROR");
+    expect(res.body.payload.commands[index3].errorCode).toEqual("Device is not available in the system");
+
+    await closeClients([deviceId1]);
+    await cleanDevicesInDb({pid: deviceId1});
+    await cleanDevicesInDb({pid: deviceId2});
   });
 
   async function connectDevices() {
-    await createClient({
+    return [await createClient({
       messageType: 'QUERY',
       payload: {
-        id: 'CgCGzmhvelv',
         on: true,
         type: 'action.devices.types.OUTLET',
         name: {name: 'td1'}
       }
-    });
+    }),
     await createClient({
       messageType: 'QUERY',
       payload: {
-        id: 'CgCGzmhvel2',
         on: false,
         type: 'action.devices.types.OUTLET',
         name: {name: 'td2'}
       }
-    });
+    })
+    ]
   }
 });

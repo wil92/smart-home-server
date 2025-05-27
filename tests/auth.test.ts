@@ -19,7 +19,6 @@ describe('Functions test', () => {
     env.auth2redirectUri = 'REDIRECT_URI';
 
     [app, server] = await getApp();
-    await cleanDevicesInDb();
   });
 
   afterAll(async () => {
@@ -27,11 +26,9 @@ describe('Functions test', () => {
   });
 
   it('should get login and redirected to home', async () => {
-    console.log('---')
     const res = await request(app).post('/auth')
         .expect(302)
         .send({username: 'test', password: 'test'});
-    console.log('333')
     expect(res.headers.location).toEqual('/');
   });
 

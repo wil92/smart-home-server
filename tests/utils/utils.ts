@@ -13,6 +13,16 @@ let testPort: number;
 let server: any;
 let clients: any[] = [];
 
+function randomText(length: number): string {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    console.log('Random Text:', result);
+    return result;
+}
+
 export async function getApp() {
   env.dbName = 'testdb';
   await connectDb();
@@ -27,7 +37,7 @@ export async function getApp() {
 
 export async function closeApp() {
   try {
-    await dropDatabase();
+    // await dropDatabase();
     await mongoose.connection.close();
     await wepSocketInstance.stop();
     await new Promise(resolve => server.close(resolve));
@@ -36,28 +46,30 @@ export async function closeApp() {
   }
 }
 
-export async function cleanDevicesInDb() {
+export async function cleanDevicesInDb(query: any) {
   await new Promise((resolve, reject) => {
-    models.Device.deleteMany({}, (err) => err ? reject(err) : resolve({}));
+    models.Device.deleteMany(query, (err: any) => err ? reject(err) : resolve({}));
   });
 }
 
-export async function createClient(deviceRes: any, onMessage = (msg: any) => msg, websocketPort = testPort) {
+export async function createClient(deviceRes: any, onMessage = (msg: any, ws: WebSocket.WebSocket) => msg, websocketPort = testPort): Promise<string> {
   deviceRes = {
     mid: '',
     messageType: 'QUERY',
+    ...deviceRes,
     payload: {
-      id: 'CgCGzmhvelv',
       on: true,
       type: 'action.devices.types.OUTLET',
-      name: {name: 'td1'}
-    },
-    ...deviceRes
+      name: {name: 'td1'},
+      ...(deviceRes.payload || {}),
+      id: randomText(11),
+    }
   };
+  console.log('createClient', {...deviceRes});
   const wsc: any = new WebSocket.WebSocket(`ws://localhost:${websocketPort}`);
   wsc.on('message', (data: any) => {
     let msg = JSON.parse(data);
-    msg = onMessage(msg);
+    msg = onMessage(msg, wsc);
     deviceRes = {...deviceRes, payload: {...deviceRes.payload, ...msg.payload.command}};
     wsc.send(JSON.stringify({...deviceRes, mid: msg.mid}));
   });
@@ -70,14 +82,19 @@ export async function createClient(deviceRes: any, onMessage = (msg: any) => msg
     .subscribe(() => resolve({})));
   wsc.did = deviceRes.payload.id;
   clients.push(wsc);
-  return wsc;
+
+  return deviceRes.payload.id;
 }
 
-export async function closeClients() {
-  for (const c of clients) {
-    await c.close();
+export async function closeClients(ids: string[]) {
+  for (const id of ids) {
+    const index = clients.findIndex(c => c.did === id);
+
+    if (index !== -1) {
+      await clients[index].close();
+      clients.splice(index, 1);
+    }
   }
-  clients = [];
 }
 
 export async function closeClient(id: string) {

@@ -8,7 +8,6 @@ describe('WebSocket', () => {
 
   beforeAll(async () => {
     [app] = await getApp();
-    await cleanDevicesInDb();
   });
 
   afterAll(async () => {
@@ -16,14 +15,12 @@ describe('WebSocket', () => {
   });
 
   afterEach(async () => {
-    await closeClients();
   });
 
   it('should request QUERY and get answer back', async () => {
-    await createClient({
+    const deviceId1 = await createClient({
         messageType: 'QUERY',
         payload: {
-          id: 'CgCGzmhvelv',
           on: true,
           type: 'action.devices.types.OUTLET',
           name: {name: 'td1'}
@@ -43,8 +40,8 @@ describe('WebSocket', () => {
           intent: "action.devices.QUERY",
           payload: {
             devices: [
-              {id: 'CgCGzmhvelv'},
-              {id: 'CgCGzmhvel2'}
+              {id: deviceId1},
+              {id: "not-found"}
             ]
           }
         }]
@@ -53,20 +50,22 @@ describe('WebSocket', () => {
 
     expect(res.body.requestId).toEqual("ff36a3cc-ec34-11e6-b1a0-64510651abcf");
 
-    expect(res.body.payload.devices['CgCGzmhvelv'].status).toEqual("SUCCESS");
-    expect(res.body.payload.devices['CgCGzmhvelv'].online).toBeTruthy();
-    expect(res.body.payload.devices['CgCGzmhvelv'].on).toBeTruthy();
+    expect(res.body.payload.devices[deviceId1].status).toEqual("SUCCESS");
+    expect(res.body.payload.devices[deviceId1].online).toBeTruthy();
+    expect(res.body.payload.devices[deviceId1].on).toBeTruthy();
 
-    expect(res.body.payload.devices['CgCGzmhvel2'].status).toEqual("ERROR");
-    expect(res.body.payload.devices['CgCGzmhvel2'].online).toBeFalsy();
-    expect(res.body.payload.devices['CgCGzmhvel2'].errorCode).toEqual('Device is not available in the system');
+    expect(res.body.payload.devices["not-found"].status).toEqual("ERROR");
+    expect(res.body.payload.devices["not-found"].online).toBeFalsy();
+    expect(res.body.payload.devices["not-found"].errorCode).toEqual('Device is not available in the system');
+
+    await closeClients([deviceId1]);
+    await cleanDevicesInDb({pid: deviceId1});
   });
 
   it('should request EXECUTE and get answer back', async () => {
-    await createClient({
+    const deviceId1 = await createClient({
         messageType: 'QUERY',
         payload: {
-          id: 'CgCGzmhvelv',
           on: true,
           type: 'action.devices.types.OUTLET',
           name: {name: 'td1'}
@@ -88,7 +87,7 @@ describe('WebSocket', () => {
           payload: {
             commands: [{
               devices: [
-                {id: 'CgCGzmhvelv'},
+                {id: deviceId1},
                 {id: 'nofound'}
               ],
               execution: [{
@@ -103,13 +102,18 @@ describe('WebSocket', () => {
 
     expect(res.body.requestId).toEqual("ff46a3cc-ec34-11e6-b1a0-64510651abcf");
 
-    expect(res.body.payload.commands[0].ids[0]).toEqual('CgCGzmhvelv');
-    expect(res.body.payload.commands[0].status).toEqual('SUCCESS');
-    expect(res.body.payload.commands[0].states.on).toBeFalsy();
-    expect(res.body.payload.commands[0].states.online).toBeTruthy();
+    const index1 = res.body.payload.commands.findIndex((c: any) => c.ids[0] === deviceId1);
+    expect(res.body.payload.commands[index1].ids[0]).toEqual(deviceId1);
+    expect(res.body.payload.commands[index1].status).toEqual('SUCCESS');
+    expect(res.body.payload.commands[index1].states.on).toBeFalsy();
+    expect(res.body.payload.commands[index1].states.online).toBeTruthy();
 
-    expect(res.body.payload.commands[1].ids[0]).toEqual("nofound");
-    expect(res.body.payload.commands[1].status).toEqual("ERROR");
-    expect(res.body.payload.commands[1].errorCode).toEqual("Device is not available in the system");
+    const index2 = res.body.payload.commands.findIndex((c: any) => c.ids[0] === 'nofound');
+    expect(res.body.payload.commands[index2].ids[0]).toEqual("nofound");
+    expect(res.body.payload.commands[index2].status).toEqual("ERROR");
+    expect(res.body.payload.commands[index2].errorCode).toEqual("Device is not available in the system");
+
+    await closeClients([deviceId1]);
+    await cleanDevicesInDb({pid: deviceId1});
   });
 });
