@@ -2,11 +2,12 @@
 
 import {config} from "dotenv";
 
-import {connectDb, runMigrations} from "../src/models";
-
 if (process.env.NODE_ENV !== 'test') {
   config();
 }
+
+import {connectDb, runMigrations} from "../src/models";
+
 
 connectDb().then(async () => {
   await runMigrations();

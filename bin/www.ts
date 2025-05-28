@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 
+import {config} from "dotenv";
+
 if (process.env.NODE_ENV !== 'test') {
-  require('dotenv').config();
+  config();
 }
 
 /**
