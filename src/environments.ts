@@ -1,3 +1,9 @@
+import {config} from "dotenv";
+
+if (process.env.NODE_ENV !== 'test') {
+  config();
+}
+
 const env = {
   key: process.env.SH_KEY || 'UQL7VpL51OAVvtZQk2Xd',
 

@@ -1,11 +1,5 @@
 #!/usr/bin/env node
 
-import {config} from "dotenv";
-
-if (process.env.NODE_ENV !== 'test') {
-  config();
-}
-
 /**
  * Module dependencies.
  */
