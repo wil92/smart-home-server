@@ -61,48 +61,61 @@ const wepSocketInstance = {
                 ws.isAlive = true;
             });
 
-            ws.on('message', async (message: any) => {
-                try {
-                    const messageObj = JSON.parse(message.toString());
-                    console.log("JSON");
+            ws.on('error', (err: any) => {
+                console.error('WebSocket error:', err);
+            });
 
-                    await models.Device.updateOrCreate(messageObj);
-                    connectedDevices.add(messageObj.payload.id);
-                    ws.lid = messageObj.payload.id;
+            ws.on('message', async (message: any, isBinary: boolean) => {
+                if (!isBinary) {
+                    try {
+                        const messageObj = JSON.parse(message.toString());
+                        console.log("JSON");
 
-                    incomeMessages.next(messageObj);
-                } catch (err) {
+                        await models.Device.updateOrCreate(messageObj);
+                        connectedDevices.add(messageObj.payload.id);
+                        ws.lid = messageObj.payload.id;
+
+                        incomeMessages.next(messageObj);
+                    } catch (err) {
+                    }
+                } else {
                     // handle jpg file
                     console.log("JPG");
+                    // mark the device as streaming
+                    ws.isStreaming = true;
+                    ws.lastFrame = new Date().getTime();
+
+                    if (!ws.lastRequest) {
+                        ws.lastRequest = new Date().getTime();
+                    }
+
                     const streamDirectory = path.join(__dirname, '../../public/stream');
                     const streamFile = path.join(streamDirectory, ws.lid + '.jpg');
-                    const hlsFile = path.join(streamDirectory, ws.lid + '.m3u8');
-
                     fs.writeFileSync(streamFile, message);
 
-                    try {
-                        await new Promise((resolve, reject) => {
-                            ffmpeg(streamFile, {}).addOption([
-                                '-loop 1',
-                                // '-c:v libx264',
-                                // '-tune zerolatency',
-                                '-pix_fmt yuv420p',
-                                '-start_number 0',
-                                '-hls_time 10',
-                                '-hls_list_size 0',
-                                '-hls_flags delete_segments',
-                                '-f hls'
-                            ]).output(hlsFile).on('end', (res, err) => {
-                                // console.log('aaa')
-                                if (err) {
-                                    return reject(err);
-                                }
-                                resolve(res);
-                            }).run();
-                            // console.log('bbbb', hlsFile)
-                        });
-                    } catch (e) {
-                        // console.error('ERROR', e);
+                    if (ws.fromGoogle) {
+                        try {
+                            const hlsFile = path.join(streamDirectory, ws.lid + '.m3u8');
+                            await new Promise((resolve, reject) => {
+                                ffmpeg(streamFile, {}).addOption([
+                                    '-loop 1',
+                                    // '-c:v libx264',
+                                    // '-tune zerolatency',
+                                    '-pix_fmt yuv420p',
+                                    '-start_number 0',
+                                    '-hls_time 10',
+                                    '-hls_list_size 0',
+                                    '-hls_flags delete_segments',
+                                    '-f hls'
+                                ]).output(hlsFile).on('end', (res, err) => {
+                                    if (err) {
+                                        return reject(err);
+                                    }
+                                    resolve(res);
+                                }).run();
+                            });
+                        } catch (ignore) {
+                        }
                     }
                     incomeMessages.next({
                         messageType: "JSON",
@@ -118,10 +131,23 @@ const wepSocketInstance = {
                 if (!ws.isAlive) {
                     connectedDevices.delete(ws.lid);
                     return ws.terminate();
+                } else {
+                    if (new Date().getTime() - ws.lastFrame > 3000) {
+                        ws.isStreaming = false;
+                    }
+                    if (new Date().getTime() - ws.lastRequest > 10000) {
+                        wepSocketInstance.sendMessage(ws.lid, {
+                            payload: {
+                                messageType: 'EXECUTE',
+                                command: {
+                                    on: false,
+                                }
+                            }
+                        } as WSMessageResponse);
+                    }
                 }
 
                 ws.isAlive = false;
-                // console.log("ping")
                 ws.ping();
             });
         }, 4000);
@@ -153,6 +179,27 @@ const wepSocketInstance = {
         });
 
         return mid;
+    },
+
+    updateLastStreamingRequest: (id: string, fromGoogle: boolean = false) => {
+        let isStreaming = false;
+        wss?.clients.forEach((ws: any) => {
+            if (ws.lid === id) {
+                ws.lastRequest = new Date().getTime();
+                ws.fromGoogle = fromGoogle;
+            }
+        });
+        return isStreaming;
+    },
+
+    isWebSocketStreaming: (id: string) => {
+        let isStreaming = false;
+        wss?.clients.forEach((ws: any) => {
+            if (ws.lid === id && ws.isStreaming) {
+                isStreaming = true;
+            }
+        });
+        return isStreaming;
     },
 
     broadcastMessage(message: string) {

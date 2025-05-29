@@ -1,7 +1,7 @@
 import jwt, {SignOptions} from 'jsonwebtoken';
 import bcrypt from "bcrypt";
 
-import env from './environments';
+import {env} from './environments';
 
 export const CODE_TOKEN_TYPE = 'code';
 export const REFRESH_TOKEN_TYPE = 'refresh_token';

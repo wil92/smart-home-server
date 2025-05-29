@@ -9,7 +9,6 @@ describe('Utils functions', () => {
 
   it('should get accessToken', function () {
     const jwt = createAccessToken();
-    console.log(jwt);
   });
 
   // only for test propose, should not be used in production
@@ -24,6 +23,5 @@ describe('Utils functions', () => {
         name: {name: 'td1'}
       }
     }, (msg) => msg, 3000);
-    console.log('Device:', device);
   });
 });

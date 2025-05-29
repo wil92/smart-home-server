@@ -2,7 +2,7 @@ import express from 'express';
 
 import {models} from '../../models';
 import webSocket, {WSMessage, WSMessageResponse} from '../../socket/web-socket';
-import env from '../../environments';
+import {env} from '../../environments';
 import {
   COMMAND_ON_OFF,
   COMMAND_START_STOP,
@@ -10,7 +10,7 @@ import {
   DEVICE_TYPE_OUTLET,
   DEVICE_TYPE_CAMERA, COMMAND_GET_CAMERA_STREAM
 } from '../../utils';
-import Device, {IDevice} from "../../models/device";
+import {IDevice} from "../../models/device";
 import {filter, firstValueFrom} from "rxjs";
 
 const router = express.Router();
@@ -37,7 +37,7 @@ router.delete('/:did', async (req: any, res: any) => {
 
 router.post('/:lid/on', (req, res) => {
   webSocket.sendMessage(req.params.lid, { payload: {command: {on: true}, messageType: 'EXECUTE'} } as WSMessageResponse);
-  res.send('');
+  res.send({});
 });
 
 router.post('/:lid/off', (req, res) => {
@@ -149,7 +149,6 @@ async function queryAction(action: Action) {
         };
       }
     } else {
-      console.log('11111111111111111111111')
       res.devices[d.id] = {
         status: 'ERROR',
         online: false,
@@ -190,6 +189,7 @@ async function executeAction(action: Action) {
                   command: commandToSendByType(device.type, exe)
                 }
               } as WSMessageResponse);
+              webSocket.updateLastStreamingRequest(d.id, true);
               device = await models.Device.findOne({ did: d.id });
               commandRes.states = { ...(await stateByType(device, true)), online: true };
             } catch (e) {

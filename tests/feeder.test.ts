@@ -1,6 +1,6 @@
 import request from 'supertest';
 
-import env from '../src/environments';
+import {env} from '../src/environments';
 import {createAccessToken} from "../src/utils";
 import {getApp, closeApp, closeClients, createClient, cleanDevicesInDb} from "./utils/utils";
 

@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import WebSocket from "ws";
 import {filter} from "rxjs";
 
-import env from "../../src/environments";
+import {env} from "../../src/environments";
 import {connectDb, dropDatabase, runMigrations, models} from "../../src/models";
 import wepSocketInstance from "../../src/socket/web-socket";
 
@@ -19,7 +19,6 @@ function randomText(length: number): string {
     for (let i = 0; i < length; i++) {
         result += characters.charAt(Math.floor(Math.random() * characters.length));
     }
-    console.log('Random Text:', result);
     return result;
 }
 
@@ -65,7 +64,6 @@ export async function createClient(deviceRes: any, onMessage = (msg: any, ws: We
       id: randomText(11),
     }
   };
-  console.log('createClient', {...deviceRes});
   const wsc: any = new WebSocket.WebSocket(`ws://localhost:${websocketPort}`);
   wsc.on('message', (data: any) => {
     let msg = JSON.parse(data);
@@ -74,7 +72,6 @@ export async function createClient(deviceRes: any, onMessage = (msg: any, ws: We
     wsc.send(JSON.stringify({...deviceRes, mid: msg.mid}));
   });
   wsc.on('open', () => {
-    console.log('sent initial status')
     wsc.send(JSON.stringify(deviceRes));
   });
   await new Promise(resolve => wepSocketInstance.incomeMessages

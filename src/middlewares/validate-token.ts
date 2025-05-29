@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import env from '../environments';
+import {env} from '../environments';
 import {ACCESS_TOKEN_TYPE} from "../utils";
 
 function validateToken(req: any, res: any, next: any) {

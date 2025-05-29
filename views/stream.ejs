@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Stream</title>
+    <link rel='stylesheet' href='/stylesheets/style.css'/>
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1">
+</head>
+<body class="login-page">
+<div class="page-container">
+    <h1>Home</h1>
+    <p>dashboard (<a href="/auth/logout">logout</a>)</p>
+    <div class="page-body">
+        <button id="streamButton">start stream</button>
+        <button id="stopStreamButton">stop stream</button>
+        <img id="stream"
+             style="display: none;"
+             alt="Camera Stream"
+             src=""/>
+    </div>
+</div>
+<script>
+    const deviceId = '<%= deviceId %>';
+    const isStreaming = '<%= isStreaming %>' === 'true';
+    const stream = document.getElementById('stream');
+    const streamButton = document.getElementById('streamButton');
+    const stopStreamButton = document.getElementById('stopStreamButton');
+    let streamInterval = null;
+
+    function updateStream() {
+        stream.src = `/stream/img/${deviceId}.jpg?${new Date().getTime()}`;
+    }
+
+    function initStreaming() {
+        if (streamInterval !== null) {
+            clearInterval(streamInterval);
+        }
+
+        stream.style.display = 'block';
+
+        updateStream();
+        streamInterval = setInterval(updateStream, 100); // Update every second
+    }
+
+    function deviceAction(did, action) {
+        return fetch(`/api/devices/${did}/${action ? 'on' : 'off'}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({action})
+        })
+            .then(res => res.json())
+            .then(res => {
+                if (action) {
+                    initStreaming();
+                } else {
+                    if (streamInterval !== null) {
+                        clearInterval(streamInterval);
+                        streamInterval = null;
+                    }
+                    stream.style.display = 'none';
+                }
+            });
+    }
+
+    if (isStreaming) {
+        initStreaming();
+    }
+
+    streamButton.addEventListener('click', () => deviceAction(deviceId, true));
+    stopStreamButton.addEventListener('click', () => deviceAction(deviceId, false));
+</script>
+</body>
+</html>

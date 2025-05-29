@@ -3,7 +3,7 @@ import {WebSocket} from 'ws';
 import fs from 'fs';
 import path from 'path';
 
-import env from '../src/environments';
+import {env} from '../src/environments';
 import {createAccessToken} from "../src/utils";
 import {getApp, closeApp, closeClients, createClient, cleanDevicesInDb} from "./utils/utils";
 import {WSMessageResponse} from "../src/socket/web-socket";

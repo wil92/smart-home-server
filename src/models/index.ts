@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
 import User from './user';
 import Version from './version';
 import Device from './device';
-import env from '../environments';
+import {env} from '../environments';
 
 export const models = { User, Device };
 

@@ -2,7 +2,7 @@ import request from 'supertest';
 import url from 'url';
 import jwt from 'jsonwebtoken';
 
-import env from '../src/environments';
+import {env} from '../src/environments';
 import {createAccessToken, createRefreshToken, createCode} from "../src/utils";
 import {getApp, closeApp, cleanDevicesInDb} from './utils/utils';
 

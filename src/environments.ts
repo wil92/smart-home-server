@@ -4,7 +4,7 @@ if (process.env.NODE_ENV !== 'test') {
   config();
 }
 
-const env = {
+export const env = {
   key: process.env.SH_KEY || 'UQL7VpL51OAVvtZQk2Xd',
 
   username: process.env.SH_USERNAME || 'admin',
@@ -21,5 +21,3 @@ const env = {
 
   apiHost: process.env.API_HOST || 'http://localhost',
 };
-
-export default env;

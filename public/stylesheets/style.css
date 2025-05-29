@@ -44,6 +44,16 @@ body {
           margin-top: 10px; }
           body .page-container .page-body .items-list .removeButton:hover {
             background: #ff0000; }
+        body .page-container .page-body .items-list .streamButton {
+          background: #ff4d4d;
+          color: #fff;
+          border: 0;
+          padding: 5px 10px;
+          font-weight: bold;
+          border-radius: 1px;
+          margin-top: 10px; }
+          body .page-container .page-body .items-list .streamButton:hover {
+            background: #ff0000; }
         body .page-container .page-body .items-list .item-device {
           width: 150px;
           margin: 10px;

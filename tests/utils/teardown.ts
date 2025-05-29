@@ -5,7 +5,4 @@ export default async function teardown() {
     await getApp();
     await dropDatabase();
     await closeApp();
-
-    console.log('----------------------------------')
-    console.log('Teardown completed successfully.');
 }

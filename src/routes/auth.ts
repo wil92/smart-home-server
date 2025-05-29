@@ -2,7 +2,7 @@ import express from 'express';
 import jwt from 'jsonwebtoken';
 
 import {queryToStr, createCode, auth2Response, CODE_TOKEN_TYPE, REFRESH_TOKEN_TYPE, validatePassword} from "../utils";
-import env from '../environments';
+import {env} from '../environments';
 import {models} from '../models';
 
 const router = express.Router();

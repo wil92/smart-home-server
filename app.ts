@@ -11,7 +11,7 @@ import apiRouter from './src/routes/api';
 import authRouter from './src/routes/auth';
 import streamRouter from './src/routes/api/stream';
 
-import env from './src/environments';
+import {env} from './src/environments';
 const app = express();
 
 // view engine setup
