@@ -17,7 +17,7 @@ To start the tests you need to have a database running. In the scripts folder yo
 file that will start a MongoDB instance by executing the following command:
 
 ```bash
-docker-compose -f scripts/docker-compose.db.yml up -d
+docker compose -f scripts/docker-compose.db.yml up -d
 ```
 
 ### Start server

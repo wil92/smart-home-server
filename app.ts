@@ -12,6 +12,8 @@ import authRouter from './src/routes/auth';
 import streamRouter from './src/routes/api/stream';
 
 import {env} from './src/environments';
+import {dbStatus} from "./src/models";
+
 const app = express();
 
 // view engine setup
@@ -20,40 +22,47 @@ app.set('view engine', 'ejs');
 
 app.use(logger('dev'));
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({extended: false}));
 app.use(cookieParser());
 app.use(cookieSession({
-  name: 'session',
-  keys: [env.key],
-  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    name: 'session',
+    keys: [env.key],
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
 }));
 app.use(sassMiddleware({
-  src: path.join(__dirname, 'public'),
-  dest: path.join(__dirname, 'public'),
-  indentedSyntax: true, // true = .sass and false = .scss
-  sourceMap: true
+    src: path.join(__dirname, 'public'),
+    dest: path.join(__dirname, 'public'),
+    indentedSyntax: true, // true = .sass and false = .scss
+    sourceMap: true
 }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/stream', streamRouter);
 app.use('/', indexRouter);
 app.use('/auth', authRouter);
+app.use('/api/health', (_req, res) => {
+    if (dbStatus()) {
+        res.status(200).json({status: 'OK'});
+    } else {
+        res.status(200).json({status: 'DB_NOT_CONNECTED'});
+    }
+});
 app.use('/api', apiRouter);
 
 // catch 404 and forward to error handler
 app.use((_req, _res, next) => {
-  next(createError(404));
+    next(createError(404));
 });
 
 // error handler
-app.use(function(err: any, req: any, res: any, _next: any) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
+app.use(function (err: any, req: any, res: any, _next: any) {
+    // set locals, only providing error in development
+    res.locals.message = err.message;
+    res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
+    // render the error page
+    res.status(err.status || 500);
+    res.render('error');
 });
 
 export default app;
