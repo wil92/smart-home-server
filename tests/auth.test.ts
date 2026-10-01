@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 
 import {env} from '../src/environments';
 import {createAccessToken, createRefreshToken, createCode} from "../src/utils";
-import {getApp, closeApp, cleanDevicesInDb} from './utils/utils';
+import {getApp, createBasicAuth, closeApp} from './utils/utils';
 
 jest.setTimeout(10000)
 
@@ -22,6 +22,7 @@ describe('Functions test', () => {
   });
 
   afterAll(async () => {
+    await closeApp(server);
   });
 
   it('should get login and redirected to home', async () => {
@@ -108,5 +109,25 @@ describe('Functions test', () => {
     const code = createCode();
     await request(app).post(`/auth/token?client_id=GOOGLE_CLIENT_ID&client_secret=GOOGLE_CLIENT_SECRET&grant_type=refresh_token&refresh_token=${encodeURI(code)}`)
       .expect(400);
+  });
+
+  it('should access the home page using basic auth credentials', async () => {
+    await request(app).get('/')
+      .set('Authorization', createBasicAuth())
+      .expect(200);
+  });
+
+  it('should get a 401 when accessing the home page without any auth', async () => {
+    const res = await request(app).get('/')
+      .expect(401);
+    expect(res.headers['www-authenticate']).toEqual('Basic realm="User Visible Realm"');
+  });
+
+  it('should get a 401 when accessing the home page with invalid basic auth credentials', async () => {
+    const invalidAuth = `Basic ${Buffer.from('wrong:credentials').toString('base64')}`;
+    const res = await request(app).get('/')
+      .set('Authorization', invalidAuth)
+      .expect(401);
+    expect(res.headers['www-authenticate']).toEqual('Basic realm="User Visible Realm"');
   });
 });

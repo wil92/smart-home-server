@@ -7,7 +7,7 @@ import {getApp, closeApp, closeClients, createClient, cleanDevicesInDb} from "./
 jest.setTimeout(1000000);
 
 describe('Functions test', () => {
-  let app: any;
+  let app: any, server: any;
   const googleUserId = 'AGENT_USER_ID';
   let devices: string[] = [];
 
@@ -19,10 +19,11 @@ describe('Functions test', () => {
     env.auth2redirectUri = 'REDIRECT_URI';
     env.googleUserId = googleUserId;
 
-    [app] = await getApp();
+    [app, server] = await getApp();
   });
 
   afterAll(async () => {
+    await closeApp(server);
   });
 
   afterEach(async () => {

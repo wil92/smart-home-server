@@ -9,6 +9,7 @@ describe('Utils functions', () => {
 
   it('should get accessToken', function () {
     const jwt = createAccessToken();
+    expect(jwt).not.toBeNull();
   });
 
   // only for test propose, should not be used in production

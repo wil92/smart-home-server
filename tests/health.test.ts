@@ -6,7 +6,7 @@ import {closeApp, getApp} from "./utils/utils";
 jest.setTimeout(1000000);
 
 describe('Application health test', () => {
-    let app: any;
+    let app: any, server: any;
 
     beforeAll(async () => {
         env.username = 'test';
@@ -16,10 +16,11 @@ describe('Application health test', () => {
         env.auth2redirectUri = 'REDIRECT_URI';
         env.googleUserId = 'AGENT_USER_ID';
 
-        [app] = await getApp();
+        [app, server] = await getApp();
     });
 
     afterAll(async () => {
+        await closeApp(server);
     });
 
     it('should return 200 OK for health check', async () => {

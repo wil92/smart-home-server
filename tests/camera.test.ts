@@ -4,15 +4,14 @@ import fs from 'fs';
 import path from 'path';
 
 import {env} from '../src/environments';
-import {createAccessToken, createBasicAuth} from "../src/utils";
-import {getApp, closeApp, closeClients, createClient, cleanDevicesInDb} from "./utils/utils";
+import {createAccessToken} from "../src/utils";
+import {getApp, closeApp, closeClients, createClient, cleanDevicesInDb, createBasicAuth} from "./utils/utils";
 import {WSMessageResponse} from "../src/socket/web-socket";
-import device from "../src/models/device";
 
 jest.setTimeout(1000000);
 
 describe('Camera integration test', () => {
-    let app: any;
+    let app: any, server: any;
     const googleUserId = 'CAMERA_AGENT_USER_ID';
     let devices: string[] = [];
 
@@ -24,10 +23,11 @@ describe('Camera integration test', () => {
         env.auth2redirectUri = 'REDIRECT_URI';
         env.googleUserId = googleUserId;
 
-        [app] = await getApp();
+        [app, server] = await getApp();
     });
 
     afterAll(async () => {
+        await closeApp(server);
     });
 
     afterEach(async () => {

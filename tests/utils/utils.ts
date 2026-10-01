@@ -10,7 +10,6 @@ import wepSocketInstance from "../../src/socket/web-socket";
 import app from "../../app";
 
 let testPort: number;
-let server: any;
 let clients: any[] = [];
 
 function randomText(length: number): string {
@@ -26,7 +25,7 @@ export async function getApp() {
     env.dbName = 'testdb';
     await connectDb();
     await runMigrations();
-    server = http.createServer(app);
+    const server: any = http.createServer(app);
     wepSocketInstance.startWebSocket(server);
     await server.listen(0);
     testPort = server.address().port;
@@ -34,7 +33,11 @@ export async function getApp() {
     return [app, server];
 }
 
-export async function closeApp() {
+export function createBasicAuth(): string {
+    return `Basic ${Buffer.from(`${env.username}:${env.password}`).toString('base64')}`;
+}
+
+export async function closeApp(server: any) {
     try {
         // await dropDatabase();
         await mongoose.connection.close();

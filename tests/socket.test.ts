@@ -4,13 +4,14 @@ import {createAccessToken} from "../src/utils";
 import {getApp, closeApp, createClient, closeClients, cleanDevicesInDb} from "./utils/utils";
 
 describe('WebSocket', () => {
-  let app: any;
+  let app: any, server: any;
 
   beforeAll(async () => {
-    [app] = await getApp();
+    [app, server] = await getApp();
   });
 
   afterAll(async () => {
+    await closeApp(server);
   });
 
   afterEach(async () => {
