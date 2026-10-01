@@ -5,6 +5,7 @@ import fs from "fs";
 import {Subject, timer, filter, first, takeUntil, tap} from "rxjs";
 import ffmpeg from "fluent-ffmpeg";
 
+import {env} from "../environments";
 import {randomText} from "../utils";
 import {models} from "../models";
 import {Server} from "node:http";
@@ -33,6 +34,14 @@ export interface WSMessageResponse {
     mid?: string;
 }
 
+export interface WSAuthMessage {
+    token: string;
+}
+
+export interface WSAuthMessageResponse {
+    status: boolean;
+}
+
 const incomeMessages = new Subject<WSMessage>();
 const connectedDevices = new Set();
 
@@ -55,6 +64,7 @@ const wepSocketInstance = {
         wss.on('connection', (ws: any) => {
             console.log('NEW CONNECTION');
             ws.isAlive = true;
+            ws.authorized = false;
 
             ws.on('pong', function () {
                 console.log('pong')
@@ -66,9 +76,28 @@ const wepSocketInstance = {
             });
 
             ws.on('message', async (message: any, isBinary: boolean) => {
+                if (!ws.authorized) {
+                    // try to authorize the connection
+                    if (!isBinary) {
+                        try {
+                            const authMessage: WSAuthMessage = JSON.parse(message.toString());
+                            if (authMessage.token === env.wsAuthToken) {
+                                ws.authorized = true;
+                                ws.send(JSON.stringify({status: true} as WSAuthMessageResponse));
+                            }
+                        } catch (err) {
+                            console.error('Error with auth message from WebSocket:', err);
+                        }
+                    }
+                    if (!ws.authorized) {
+                        console.error('Unauthorized WebSocket connection');
+                        ws.terminate();
+                    }
+                    return;
+                }
                 if (!isBinary) {
                     try {
-                        const messageObj = JSON.parse(message.toString());
+                        const messageObj: WSMessage = JSON.parse(message.toString());
                         console.log("JSON");
 
                         await models.Device.updateOrCreate(messageObj);

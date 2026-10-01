@@ -60,6 +60,10 @@ export function createAccessToken(): string {
   return createToken({type: ACCESS_TOKEN_TYPE}, '2h');
 }
 
+export function createBasicAuth(): string {
+  return `Basic ${Buffer.from(`${env.username}:${env.password}`).toString('base64')}`;
+}
+
 export function createToken(payload = {}, expiresIn = '20m'): string {
   return jwt.sign(payload, env.key, {expiresIn} as SignOptions);
 }

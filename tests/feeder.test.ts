@@ -9,6 +9,7 @@ jest.setTimeout(1000000);
 describe('Functions test', () => {
   let app: any;
   const googleUserId = 'AGENT_USER_ID';
+  let devices: string[] = [];
 
   beforeAll(async () => {
     env.username = 'test';
@@ -22,10 +23,14 @@ describe('Functions test', () => {
   });
 
   afterAll(async () => {
-    await closeApp();
   });
 
   afterEach(async () => {
+    await closeClients(devices);
+    for (const deviceId of devices) {
+      await cleanDevicesInDb({ pid: deviceId });
+    }
+    devices = [];
   });
 
   it('should SYNC the items with google actions', async () => {
@@ -57,8 +62,7 @@ describe('Functions test', () => {
     expect(res.body.payload.devices[index].traits.length).toEqual(1);
     expect(res.body.payload.devices[index].traits[0]).toEqual('action.devices.traits.StartStop');
 
-    await closeClients([deviceId]);
-    await cleanDevicesInDb({ pid: deviceId });
+    devices.push(deviceId);
   });
 
   it('should response to the QUERY request', async () => {
@@ -91,8 +95,7 @@ describe('Functions test', () => {
     expect(res.body.payload.devices['nofound'].online).toEqual(false);
     expect(res.body.payload.devices['nofound'].errorCode).toEqual('Device is not available in the system');
 
-    await closeClients([deviceId]);
-    await cleanDevicesInDb({ pid: deviceId });
+    devices.push(deviceId);
   });
 
   it('should response to the EXECUTE request', async () => {
@@ -140,8 +143,7 @@ describe('Functions test', () => {
     expect(res.body.payload.commands[index2].status).toEqual("ERROR");
     expect(res.body.payload.commands[index2].errorCode).toEqual("Device is not available in the system");
 
-    await closeClients([deviceId]);
-    await cleanDevicesInDb({ pid: deviceId });
+    devices.push(deviceId);
   });
 
   async function connectDevices(onMessage = (msg: any) => msg) {

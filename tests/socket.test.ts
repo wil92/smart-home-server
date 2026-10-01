@@ -11,7 +11,6 @@ describe('WebSocket', () => {
   });
 
   afterAll(async () => {
-    await closeApp();
   });
 
   afterEach(async () => {

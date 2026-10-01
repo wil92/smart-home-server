@@ -20,7 +20,6 @@ describe('Application health test', () => {
     });
 
     afterAll(async () => {
-        await closeApp();
     });
 
     it('should return 200 OK for health check', async () => {

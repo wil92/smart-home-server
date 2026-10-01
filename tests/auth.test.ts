@@ -22,7 +22,6 @@ describe('Functions test', () => {
   });
 
   afterAll(async () => {
-    await closeApp();
   });
 
   it('should get login and redirected to home', async () => {
