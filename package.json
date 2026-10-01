@@ -51,7 +51,6 @@
     "testEnvironment": "node",
     "coveragePathIgnorePatterns": [
       "/node_modules/"
-    ],
-    "globalTeardown": "./tests/utils/teardown.ts"
+    ]
   }
 }
