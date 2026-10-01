@@ -1,0 +1,180 @@
+<mxfile host="app.diagrams.net" modified="2026-10-01T14:53:00.000Z" agent="GitHub Copilot" version="24.7.17" type="device">
+  <diagram id="smart-home-flows" name="Tested communication flows">
+    <mxGraphModel dx="1440" dy="2400" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="2400" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="lane-device" value="Physical device&#xa;(WebSocket client)" style="swimlane;html=1;startSize=54;horizontal=1;fillColor=#dae8fc;swimlaneFillColor=#f5f9ff;strokeColor=#6c8ebf;fontStyle=1;fontSize=16;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="30" y="20" width="380" height="2340" as="geometry"/>
+        </mxCell>
+        <mxCell id="lane-server" value="Smart-home server" style="swimlane;html=1;startSize=54;horizontal=1;fillColor=#d5e8d4;swimlaneFillColor=#f6fbf5;strokeColor=#82b366;fontStyle=1;fontSize=16;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="410" y="20" width="540" height="2340" as="geometry"/>
+        </mxCell>
+        <mxCell id="lane-google" value="Google Home server" style="swimlane;html=1;startSize=54;horizontal=1;fillColor=#ffe6cc;swimlaneFillColor=#fffaf5;strokeColor=#d79b00;fontStyle=1;fontSize=16;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="950" y="20" width="420" height="2340" as="geometry"/>
+        </mxCell>
+        <mxCell id="title" value="Communication flows exercised by the tests&#xa;Messages are shown in request/response order; grouped outcomes are separate tested branches." style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=18;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry x="270" y="80" width="860" height="55" as="geometry"/>
+        </mxCell>
+        <mxCell id="ws-heading" value="1. Device connects and registers" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=14;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="55" y="150" width="1290" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="ws-1" value="Open WebSocket connection" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#4d6c9c;fontSize=11;labelBackgroundColor=#f5f9ff;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="220" y="205" as="sourcePoint"/><mxPoint x="680" y="205" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="ws-2" value="Send JSON registration: QUERY + device id, type, name, initial state" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#4d6c9c;fontSize=11;labelBackgroundColor=#f5f9ff;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="220" y="245" as="sourcePoint"/><mxPoint x="680" y="245" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="ws-3" value="Persist/update device; mark WebSocket id connected" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#4d6c9c;fontSize=11;labelBackgroundColor=#f6fbf5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="680" y="285" as="sourcePoint"/><mxPoint x="220" y="285" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="ws-note" value="The connection is now eligible for Google QUERY and EXECUTE requests. On server startup, stored device on-state is reset to false." style="shape=note;whiteSpace=wrap;html=1;size=16;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;align=left;" vertex="1" parent="1">
+          <mxGeometry x="495" y="305" width="370" height="48" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="sync-heading" value="2. Google SYNC — discover configured devices" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=14;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="55" y="370" width="1290" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="sync-1" value="POST fulfillment: action.devices.SYNC (Bearer access token)" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#568a52;fontSize=11;labelBackgroundColor=#fffaf5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="1170" y="425" as="sourcePoint"/><mxPoint x="680" y="425" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="sync-2" value="Read stored devices; build id/type/name/traits/state-reporting metadata" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#568a52;fontSize=11;labelBackgroundColor=#f6fbf5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="680" y="465" as="sourcePoint"/><mxPoint x="1170" y="465" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="sync-note" value="SYNC response includes agentUserId and all known devices. Tests cover OUTLET / OnOff, PETFEEDER / StartStop, and CAMERA / CameraStream (camera reports state; outlet and feeder do not)." style="shape=note;whiteSpace=wrap;html=1;size=16;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;align=left;" vertex="1" parent="1">
+          <mxGeometry x="495" y="485" width="370" height="72" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="query-heading" value="3. Google QUERY — status lookup has distinct availability paths" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=14;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="55" y="575" width="1290" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="query-1" value="POST fulfillment: action.devices.QUERY (requested device ids)" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#568a52;fontSize=11;labelBackgroundColor=#fffaf5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="1170" y="630" as="sourcePoint"/><mxPoint x="680" y="630" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="query-exists" value="Known + connected: send QUERY with mid" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#568a52;fontSize=11;labelBackgroundColor=#f5f9ff;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="680" y="675" as="sourcePoint"/><mxPoint x="220" y="675" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="query-ack" value="Return current state + matching mid" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#568a52;fontSize=11;labelBackgroundColor=#f5f9ff;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="220" y="710" as="sourcePoint"/><mxPoint x="680" y="710" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="query-success" value="SUCCESS, online=true; state by type (on / isRunning / camera state)" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#568a52;fontSize=11;labelBackgroundColor=#fffaf5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="680" y="745" as="sourcePoint"/><mxPoint x="1170" y="745" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="query-offline" value="Known but disconnected, or QUERY acknowledgement times out (5 s)" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#d79b00;fontSize=11;labelBackgroundColor=#f6fbf5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="680" y="790" as="sourcePoint"/><mxPoint x="1170" y="790" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="query-offline-label" value="OFFLINE, online=false" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1010" y="805" width="300" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="query-missing" value="Unknown device id (not in database)" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#b85450;fontSize=11;labelBackgroundColor=#f6fbf5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="680" y="855" as="sourcePoint"/><mxPoint x="1170" y="855" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="query-error" value="ERROR, online=false, errorCode: Device is not available in the system" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#b85450;fontSize=11;labelBackgroundColor=#fffaf5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="680" y="890" as="sourcePoint"/><mxPoint x="1170" y="890" as="targetPoint"/></mxGeometry>
+        </mxCell>
+
+        <mxCell id="execute-heading" value="4. Google EXECUTE — command is mapped to device type" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=14;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="55" y="930" width="1290" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="execute-1" value="POST fulfillment: action.devices.EXECUTE (commands + target ids)" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#568a52;fontSize=11;labelBackgroundColor=#fffaf5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="1170" y="985" as="sourcePoint"/><mxPoint x="680" y="985" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="execute-device" value="Known + connected: EXECUTE + mapped command + mid&#xa;OUTLET: on/off   |   PETFEEDER: start/stop" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#568a52;fontSize=11;labelBackgroundColor=#f5f9ff;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="680" y="1035" as="sourcePoint"/><mxPoint x="220" y="1035" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="execute-ack" value="Apply command and echo response with matching mid + updated state" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#568a52;fontSize=11;labelBackgroundColor=#f5f9ff;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="220" y="1075" as="sourcePoint"/><mxPoint x="680" y="1075" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="execute-success" value="SUCCESS + resulting state + online=true" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#568a52;fontSize=11;labelBackgroundColor=#fffaf5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="680" y="1115" as="sourcePoint"/><mxPoint x="1170" y="1115" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="execute-offline" value="Known but disconnected, or EXECUTE acknowledgement times out" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#d79b00;fontSize=11;labelBackgroundColor=#f6fbf5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="680" y="1160" as="sourcePoint"/><mxPoint x="1170" y="1160" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="execute-offline-label" value="OFFLINE, online=false" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="1010" y="1175" width="300" height="28" as="geometry"/>
+        </mxCell>
+        <mxCell id="execute-missing" value="Unknown device id" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#b85450;fontSize=11;labelBackgroundColor=#f6fbf5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="680" y="1220" as="sourcePoint"/><mxPoint x="1170" y="1220" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="execute-error" value="ERROR, errorCode: Device is not available in the system" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#b85450;fontSize=11;labelBackgroundColor=#fffaf5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="680" y="1255" as="sourcePoint"/><mxPoint x="1170" y="1255" as="targetPoint"/></mxGeometry>
+        </mxCell>
+
+        <mxCell id="camera-heading" value="5. Camera EXECUTE — capture, transcode and serve stream" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=14;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="55" y="1300" width="1290" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="camera-1" value="EXECUTE GetCameraStream (HLS; Chromecast requested)" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#568a52;fontSize=11;labelBackgroundColor=#fffaf5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="1170" y="1355" as="sourcePoint"/><mxPoint x="680" y="1355" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="camera-2" value="Send EXECUTE with on=true; mark stream request as Google-originated" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#568a52;fontSize=11;labelBackgroundColor=#f5f9ff;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="680" y="1395" as="sourcePoint"/><mxPoint x="220" y="1395" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="camera-3" value="Acknowledge EXECUTE (matching mid)" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#568a52;fontSize=11;labelBackgroundColor=#f5f9ff;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="220" y="1430" as="sourcePoint"/><mxPoint x="680" y="1430" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="camera-4" value="Send binary JPEG frame(s)" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#4d6c9c;fontSize=11;labelBackgroundColor=#f5f9ff;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="220" y="1465" as="sourcePoint"/><mxPoint x="680" y="1465" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="camera-note" value="Server saves JPEG, converts it to HLS (m3u8 + TS) for Google-originated requests, and waits for the frame signal before completing the camera response." style="shape=note;whiteSpace=wrap;html=1;size=16;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;align=left;" vertex="1" parent="1">
+          <mxGeometry x="495" y="1485" width="370" height="65" as="geometry"/>
+        </mxCell>
+        <mxCell id="camera-5" value="SUCCESS: HLS protocol + stream URL for this camera id" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#568a52;fontSize=11;labelBackgroundColor=#fffaf5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="680" y="1565" as="sourcePoint"/><mxPoint x="1170" y="1565" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="camera-6" value="GET /stream/hls/{id}.m3u8" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#d79b00;fontSize=11;labelBackgroundColor=#fffaf5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="1170" y="1605" as="sourcePoint"/><mxPoint x="680" y="1605" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="camera-7" value="Serve HLS manifest (and generated media segments)" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#d79b00;fontSize=11;labelBackgroundColor=#fffaf5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="680" y="1640" as="sourcePoint"/><mxPoint x="1170" y="1640" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="camera-missing" value="Unknown camera id in EXECUTE" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#b85450;fontSize=11;labelBackgroundColor=#f6fbf5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="680" y="1685" as="sourcePoint"/><mxPoint x="1170" y="1685" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="camera-error" value="ERROR: Device is not available in the system" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#b85450;fontSize=11;labelBackgroundColor=#fffaf5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="680" y="1720" as="sourcePoint"/><mxPoint x="1170" y="1720" as="targetPoint"/></mxGeometry>
+        </mxCell>
+
+        <mxCell id="auth-heading" value="6. Google account linking and API authorization outcomes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=14;align=left;spacingLeft=12;" vertex="1" parent="1">
+          <mxGeometry x="55" y="1765" width="1290" height="32" as="geometry"/>
+        </mxCell>
+        <mxCell id="auth-1" value="Open account-linking login with client_id, redirect_uri, state" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#568a52;fontSize=11;labelBackgroundColor=#fffaf5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="1170" y="1820" as="sourcePoint"/><mxPoint x="680" y="1820" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="auth-2" value="Submit username/password; validate configured client and redirect" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#568a52;fontSize=11;labelBackgroundColor=#fffaf5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="1170" y="1855" as="sourcePoint"/><mxPoint x="680" y="1855" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="auth-3" value="Redirect with signed authorization code + original state" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#568a52;fontSize=11;labelBackgroundColor=#fffaf5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="680" y="1890" as="sourcePoint"/><mxPoint x="1170" y="1890" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="auth-4" value="Exchange authorization code (client credentials)" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#568a52;fontSize=11;labelBackgroundColor=#fffaf5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="1170" y="1925" as="sourcePoint"/><mxPoint x="680" y="1925" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="auth-5" value="Return Bearer access token + refresh token (2 h access expiry)" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#568a52;fontSize=11;labelBackgroundColor=#fffaf5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="680" y="1960" as="sourcePoint"/><mxPoint x="1170" y="1960" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="auth-6" value="Exchange refresh token" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#568a52;fontSize=11;labelBackgroundColor=#fffaf5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="1170" y="1995" as="sourcePoint"/><mxPoint x="680" y="1995" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="auth-7" value="Return new access token" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#568a52;fontSize=11;labelBackgroundColor=#fffaf5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="680" y="2030" as="sourcePoint"/><mxPoint x="1170" y="2030" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="auth-error" value="Invalid credentials/client, wrong token type, expired or invalid code/refresh token&#xa;→ token endpoint returns 400 invalid_grant" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;fontSize=11;" vertex="1" parent="1">
+          <mxGeometry x="980" y="2050" width="355" height="48" as="geometry"/>
+        </mxCell>
+        <mxCell id="api-auth" value="Call protected fulfillment/API with Bearer token" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#568a52;fontSize=11;labelBackgroundColor=#fffaf5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="1170" y="2120" as="sourcePoint"/><mxPoint x="680" y="2120" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="api-auth-ok" value="Valid access token → process request (e.g. device list / fulfillment)" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#568a52;fontSize=11;labelBackgroundColor=#fffaf5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="680" y="2155" as="sourcePoint"/><mxPoint x="1170" y="2155" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="api-auth-fail" value="Missing, invalid, or refresh token used as access token → HTTP 401" style="edgeStyle=none;html=1;endArrow=block;rounded=0;strokeColor=#b85450;fontSize=11;labelBackgroundColor=#fffaf5;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="680" y="2195" as="sourcePoint"/><mxPoint x="1170" y="2195" as="targetPoint"/></mxGeometry>
+        </mxCell>
+        <mxCell id="health-note" value="Other tested endpoint: GET /api/health → HTTP 200 {status: OK}. Utility tests also cover random ids and password hashing/validation." style="shape=note;whiteSpace=wrap;html=1;size=16;fillColor=#fff2cc;strokeColor=#d6b656;fontSize=11;align=left;" vertex="1" parent="1">
+          <mxGeometry x="495" y="2240" width="370" height="60" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
