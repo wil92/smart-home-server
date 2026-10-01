@@ -68,9 +68,9 @@ describe('Camera integration test', () => {
   });
 
   it('should response to the QUERY request', async () => {
-    const deviceId = await connectDevices();
+    const deviceId: string = await connectDevices();
 
-    const token = createAccessToken();
+    const token: string = createAccessToken();
     const res = await request(app).post('/api/lights/fulfillment')
       .set('Authorization', `Bearer ${token}`)
       .send({
@@ -107,14 +107,16 @@ describe('Camera integration test', () => {
       expect(msg.payload.command).toBeTruthy();
       expect(msg.payload.command?.on).toEqual(true);
 
-      const img = fs.readFileSync(path.join(__dirname, 'utils/diode.jpg'));
-      ws.send(img);
+      setTimeout(() => {
+        const img = fs.readFileSync(path.join(__dirname, 'utils/diode.jpg'));
+        ws.send(img);
+      }, 500);
 
       return msg;
     };
-    const deviceId = await connectDevices(onMessage);
+    const deviceId: string = await connectDevices(onMessage);
 
-    const token = createAccessToken();
+    const token: string = createAccessToken();
     const res = await request(app).post('/api/devices/fulfillment')
       .set('Authorization', `Bearer ${token}`)
       .send({

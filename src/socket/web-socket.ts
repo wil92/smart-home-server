@@ -77,6 +77,7 @@ const wepSocketInstance = {
 
                         incomeMessages.next(messageObj);
                     } catch (err) {
+                        console.error('Error with message from WebSocket:', err);
                     }
                 } else {
                     // handle jpg file
@@ -161,7 +162,7 @@ const wepSocketInstance = {
                 .pipe(
                     filter((m: WSMessage) => m.mid === mid),
                     first(),
-                    takeUntil(timer(1000).pipe(tap(() => reject()))),
+                    takeUntil(timer(5000).pipe(tap(() => reject()))),
                 )
                 .subscribe(m => {
                     resolve(m);
