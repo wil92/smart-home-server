@@ -2,6 +2,7 @@ import jwt, {SignOptions} from 'jsonwebtoken';
 import bcrypt from "bcrypt";
 
 import {env} from './environments';
+import webSocket from "./socket/web-socket";
 
 export const CODE_TOKEN_TYPE = 'code';
 export const REFRESH_TOKEN_TYPE = 'refresh_token';
@@ -80,4 +81,14 @@ export async function hashPassword(password: string): Promise<string> {
 
 export async function validatePassword(password: string, hash: string): Promise<boolean> {
   return await bcrypt.compare(password, hash);
+}
+
+export function sanitizeDevice(device: any): any {
+  return {
+    did: device.did,
+        type: device.type,
+      name: device.name,
+      params: device.params,
+      online: webSocket.connectedDevices.has(device.did)
+  };
 }

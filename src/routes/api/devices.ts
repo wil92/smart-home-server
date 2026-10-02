@@ -8,7 +8,7 @@ import {
     COMMAND_START_STOP,
     DEVICE_TYPE_PETFEEDER,
     DEVICE_TYPE_OUTLET,
-    DEVICE_TYPE_CAMERA, COMMAND_GET_CAMERA_STREAM
+    DEVICE_TYPE_CAMERA, COMMAND_GET_CAMERA_STREAM, sanitizeDevice
 } from '../../utils';
 import {IDevice} from "../../models/device";
 import {filter, firstValueFrom} from "rxjs";
@@ -21,13 +21,7 @@ router.get('/', async (req, res, next) => {
     const response = [];
 
     for (let device of devices) {
-        response.push({
-            did: device.did,
-            type: device.type,
-            name: device.name,
-            params: device.params,
-            online: webSocket.connectedDevices.has(device.did)
-        });
+        response.push(sanitizeDevice(device));
     }
 
     res.status(200).json(response);
@@ -37,18 +31,13 @@ router.get('/', async (req, res, next) => {
 router.get('/:did', async (req, res, next) => {
     const device = await models.Device.findOne({did: req.params.did});
     if (device) {
-        res.status(200).json({
-            did: device.did,
-            type: device.type,
-            name: device.name,
-            params: device.params,
-            online: webSocket.connectedDevices.has(device.did)
-        });
+        res.status(200).json(sanitizeDevice(device));
     } else {
         res.status(404).json({error: 'Device not found'});
     }
 });
 
+// DELETE device by id.
 router.delete('/:did', async (req: any, res: any) => {
     return models.Device.deleteOne({did: req.params.did})
         .then(() => res.send(''))
@@ -79,6 +68,7 @@ router.post('/:lid/off', (req, res) => {
     res.send('');
 });
 
+// POST fulfillment request from Google Home.
 router.post('/fulfillment', async (req, res) => {
     const {requestId, inputs} = req.body;
     let payload;
