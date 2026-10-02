@@ -1,6 +1,7 @@
 import express from 'express';
+
 import devicesRouter from './devices';
-import validateToken from "../../middlewares/validate-token";
+import validateToken from '../../middlewares/validate-token';
 
 const router = express.Router();
 

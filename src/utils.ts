@@ -1,8 +1,8 @@
-import jwt, {SignOptions} from 'jsonwebtoken';
-import bcrypt from "bcrypt";
+import jwt, { SignOptions } from 'jsonwebtoken';
+import bcrypt from 'bcrypt';
 
-import {env} from './environments';
-import webSocket from "./socket/web-socket";
+import { env } from './environments';
+import webSocket from './socket/web-socket';
 
 export const CODE_TOKEN_TYPE = 'code';
 export const REFRESH_TOKEN_TYPE = 'refresh_token';
@@ -31,7 +31,7 @@ export function queryToStr(query: any): string {
 }
 
 export function createCode() {
-  return createToken({type: CODE_TOKEN_TYPE});
+  return createToken({ type: CODE_TOKEN_TYPE });
 }
 
 export interface Auth2Response {
@@ -54,15 +54,15 @@ export function auth2Response(withRefreshToken = true): Auth2Response {
 }
 
 export function createRefreshToken(): string {
-  return createToken({type: REFRESH_TOKEN_TYPE}, '2y');
+  return createToken({ type: REFRESH_TOKEN_TYPE }, '2y');
 }
 
 export function createAccessToken(): string {
-  return createToken({type: ACCESS_TOKEN_TYPE}, '2h');
+  return createToken({ type: ACCESS_TOKEN_TYPE }, '2h');
 }
 
 export function createToken(payload = {}, expiresIn = '20m'): string {
-  return jwt.sign(payload, env.key, {expiresIn} as SignOptions);
+  return jwt.sign(payload, env.key, { expiresIn } as SignOptions);
 }
 
 const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -86,9 +86,9 @@ export async function validatePassword(password: string, hash: string): Promise<
 export function sanitizeDevice(device: any): any {
   return {
     did: device.did,
-        type: device.type,
-      name: device.name,
-      params: device.params,
-      online: webSocket.connectedDevices.has(device.did)
+    type: device.type,
+    name: device.name,
+    params: device.params,
+    online: webSocket.connectedDevices.has(device.did)
   };
 }

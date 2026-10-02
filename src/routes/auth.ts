@@ -1,27 +1,34 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
 
-import {queryToStr, createCode, auth2Response, CODE_TOKEN_TYPE, REFRESH_TOKEN_TYPE, validatePassword} from "../utils";
-import {env} from '../environments';
-import {models} from '../models';
+import {
+  queryToStr,
+  createCode,
+  auth2Response,
+  CODE_TOKEN_TYPE,
+  REFRESH_TOKEN_TYPE,
+  validatePassword
+} from '../utils';
+import { env } from '../environments';
+import { models } from '../models';
 
 const router = express.Router();
 
 router.get('/', async (req, res, _next) => {
-  res.render('login', {title: 'LogIn', query: queryToStr(req.query), error: null});
+  res.render('login', { title: 'LogIn', query: queryToStr(req.query), error: null });
 });
 
 async function checkCredentials(username: string, password: string) {
-  const user = await models.User.findOne({username});
-  if (!!user) {
+  const user = await models.User.findOne({ username });
+  if (user) {
     return await validatePassword(password, user.password);
   }
   return false;
 }
 
 router.post('/', async (req: any, res, _next) => {
-  const {username, password} = req.body;
-  let isValidPassword = await checkCredentials(username, password);
+  const { username, password } = req.body;
+  const isValidPassword = await checkCredentials(username, password);
   if (!isValidPassword) {
     res.status(401);
     return res.render('login', {
@@ -30,12 +37,12 @@ router.post('/', async (req: any, res, _next) => {
       error: 'Password or Username incorrect'
     });
   }
-  const {client_id, redirect_uri, state} = req.query;
+  const { client_id, redirect_uri, state } = req.query;
   if (redirect_uri) {
     if (client_id === env.auth2ClientId && redirect_uri === env.auth2redirectUri) {
       const code = createCode();
       req.session['isLogin'] = true;
-      return res.redirect(`${redirect_uri}?${queryToStr({code, state})}`);
+      return res.redirect(`${redirect_uri}?${queryToStr({ code, state })}`);
     } else {
       res.render('login', {
         title: 'LogIn',
@@ -50,16 +57,22 @@ router.post('/', async (req: any, res, _next) => {
 });
 
 router.post('/token', async (req, res) => {
-  const {client_id, client_secret, grant_type, code, refresh_token, username, password} = req.body;
-  if ((client_id !== env.auth2ClientId || client_secret !== env.auth2ClientSecret) && grant_type !== 'basic') {
+  const { client_id, client_secret, grant_type, code, refresh_token, username, password } =
+    req.body;
+  if (
+    (client_id !== env.auth2ClientId || client_secret !== env.auth2ClientSecret) &&
+    grant_type !== 'basic'
+  ) {
     return sendError(res);
   }
   if (grant_type === 'authorization_code' || grant_type === 'refresh_token') {
     const token = grant_type === 'authorization_code' ? code : refresh_token;
     try {
       const payload: any = jwt.verify(token, env.key);
-      if ((grant_type === 'authorization_code' && payload.type !== CODE_TOKEN_TYPE) ||
-        (grant_type === 'refresh_token' && payload.type !== REFRESH_TOKEN_TYPE)) {
+      if (
+        (grant_type === 'authorization_code' && payload.type !== CODE_TOKEN_TYPE) ||
+        (grant_type === 'refresh_token' && payload.type !== REFRESH_TOKEN_TYPE)
+      ) {
         throw new Error('Invalid token');
       }
       return res.send(auth2Response(grant_type === 'authorization_code'));
@@ -68,7 +81,7 @@ router.post('/token', async (req, res) => {
       return sendError(res);
     }
   } else if (grant_type === 'basic') {
-    let isValidPassword = await checkCredentials(username, password);
+    const isValidPassword = await checkCredentials(username, password);
     if (isValidPassword) {
       return res.send(auth2Response(true));
     }
@@ -78,7 +91,7 @@ router.post('/token', async (req, res) => {
 
 function sendError(res: any) {
   res.status(400);
-  return res.send({error: 'invalid_grant'});
+  return res.send({ error: 'invalid_grant' });
 }
 
 router.get('/logout', (req: any, res) => {

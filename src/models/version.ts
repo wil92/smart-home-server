@@ -1,8 +1,8 @@
 import mongoose from 'mongoose';
 
 interface IVersion {
-    version: string;
-    description: string;
+  version: string;
+  description: string;
 }
 
 interface VersionModel extends mongoose.Model<IVersion> {
@@ -14,19 +14,19 @@ const versionSchema = new mongoose.Schema<IVersion, VersionModel>(
     version: {
       type: String,
       unique: true,
-      required: true,
+      required: true
     },
     description: {
       type: String,
       unique: false,
-      required: true,
-    },
+      required: true
+    }
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
 versionSchema.statics.versionExist = async function (version) {
-  const v = await this.findOne({version});
+  const v = await this.findOne({ version });
   return !!v;
 };
 

@@ -25,14 +25,14 @@ module.exports = defineConfig([
     '**/jest.config.ts'
   ]),
   {
-    files: ['src/**/*.ts', 'tests/**/*.ts'],
+    files: ['src/**/*.ts'],
 
-    ignores: ['**/*.spec.ts'],
+    ignores: ['**/*.test.ts'],
 
     languageOptions: {
       parser: tsParser,
       parserOptions: {
-        project: ['tsconfig.json', 'apps/*/tsconfig.json', 'libs/*/tsconfig.json'],
+        project: ['tsconfig.json'],
         createDefaultProgram: true
       }
     },
@@ -57,26 +57,6 @@ module.exports = defineConfig([
     },
 
     rules: {
-      // Angular rules
-      '@angular-eslint/component-selector': [
-        'error',
-        {
-          prefix: '',
-          style: 'kebab-case',
-          type: 'element'
-        }
-      ],
-
-      '@angular-eslint/directive-selector': [
-        'error',
-        {
-          prefix: '',
-          style: 'camelCase',
-          type: 'attribute'
-        }
-      ],
-      '@angular-eslint/prefer-standalone': 'off',
-
       // Rxjs rules
       '@rxlint/no-nested-subscribe': 'error',
       '@rxlint/no-subject-unsubscribe': 'off',
@@ -89,7 +69,7 @@ module.exports = defineConfig([
       'no-console': [
         'error',
         {
-          allow: ['warn', 'error']
+          allow: ['warn', 'error', 'info']
         }
       ],
       'no-unused-vars': 'off',
@@ -145,13 +125,13 @@ module.exports = defineConfig([
     }
   },
   {
-    files: ['**/*.spec.ts'],
+    files: ['**/*.test.ts'],
     plugins: { jest },
     languageOptions: {
       globals: jest.environments.globals.globals,
       parser: tsParser,
       parserOptions: {
-        project: ['tsconfig.json', 'apps/*/tsconfig.spec.json', 'libs/*/tsconfig.spec.json'],
+        project: ['tsconfig.json'],
         createDefaultProgram: true
       }
     },
