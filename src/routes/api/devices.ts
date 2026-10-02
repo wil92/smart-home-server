@@ -15,14 +15,22 @@ import {filter, firstValueFrom} from "rxjs";
 
 const router = express.Router();
 
+// GET devices listing.
 router.get('/', async (req, res, next) => {
   const devices  = await models.Device.find({}) as unknown as any;
+  const response = [];
 
   for (let device of devices) {
-    device.online = webSocket.connectedDevices.has(device.did);
+    response.push({
+      did: device.did,
+      type: device.type,
+      name: device.name,
+      params: device.params,
+      online: webSocket.connectedDevices.has(device.did)
+    });
   }
 
-  res.send(devices);
+  res.status(200).json(response);
 });
 
 router.delete('/:did', async (req: any, res: any) => {
