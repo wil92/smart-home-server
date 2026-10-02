@@ -13,19 +13,9 @@ const compat = new FlatCompat({
 });
 
 module.exports = defineConfig([
-  globalIgnores([
-    '**/dist',
-    '**/coverage',
-    '**/node_modules',
-    '**/tmp',
-    '**/polyfills.ts',
-    '**/test-setup.ts',
-    '**/main.ts',
-    '**/environment*.ts',
-    '**/jest.config.ts'
-  ]),
+  globalIgnores(['**/dist', '**/bin', '**/node_modules', '**/scripts']),
   {
-    files: ['src/**/*.ts'],
+    files: ['src/**/*.ts', 'src/**/*.ts'],
 
     ignores: ['**/*.test.ts'],
 
@@ -125,34 +115,39 @@ module.exports = defineConfig([
     }
   },
   {
-    files: ['**/*.test.ts'],
-    plugins: { jest },
+    files: ['tests/**/*.test.ts'],
+    plugins: {
+      jest,
+      prettier,
+      '@typescript-eslint': tsPlugin
+    },
+    extends: compat.extends(
+      'eslint:recommended',
+      'plugin:import/recommended',
+      'plugin:@typescript-eslint/recommended',
+      'plugin:import/typescript',
+      'plugin:prettier/recommended',
+      'plugin:@rxlint/recommended',
+      'eslint-config-prettier'
+    ),
     languageOptions: {
       globals: jest.environments.globals.globals,
       parser: tsParser,
       parserOptions: {
-        project: ['tsconfig.json'],
+        project: ['tsconfig.json', 'tsconfig.test.json'],
         createDefaultProgram: true
       }
     },
     rules: {
       'jest/no-disabled-tests': 'error',
-      'no-unused-vars': 'error'
-    }
-  },
-  {
-    files: ['e2e/**/*.ts', 'playwright.*.ts', 'regression-tests/**/*.ts'],
-    languageOptions: {
-      parser: tsParser,
-      parserOptions: {
-        project: ['tsconfig.json'],
-        createDefaultProgram: true
-      }
-    },
-    plugins: {
-      '@typescript-eslint': tsPlugin
-    },
-    rules: {
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_'
+        }
+      ],
       '@typescript-eslint/no-explicit-any': 'off'
     }
   }

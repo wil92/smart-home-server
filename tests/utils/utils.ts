@@ -54,7 +54,7 @@ export async function cleanDevicesInDb(query: any) {
     });
 }
 
-export async function createClient(deviceRes: any, onMessage = (msg: any, ws: WebSocket.WebSocket) => msg, websocketPort = testPort): Promise<string> {
+export async function createClient(deviceRes: any, onMessage = (msg: any, _ws: WebSocket.WebSocket) => msg, websocketPort = testPort): Promise<string> {
     deviceRes = {
         mid: '',
         messageType: 'QUERY',

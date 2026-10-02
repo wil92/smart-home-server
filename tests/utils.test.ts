@@ -1,5 +1,5 @@
-import {randomText, createAccessToken} from "../src/utils";
-import {createClient} from "./utils/utils";
+import { randomText, createAccessToken } from '../src/utils';
+import { createClient } from './utils/utils';
 
 describe('Utils functions', () => {
   it('should expect a random text of size 10', () => {
@@ -14,15 +14,19 @@ describe('Utils functions', () => {
 
   // only for test propose, should not be used in production
   xit('should connect testing device to server', async () => {
-    const device = await createClient({
-      messageType: 'QUERY',
-      payload: {
-        id: 'CgCGzmhvelv1',
-        on: true,
-        type: 'action.devices.types.OUTLET',
-        // type: 'action.devices.types.PETFEEDER',
-        name: {name: 'td1'}
-      }
-    }, (msg) => msg, 3000);
+    const _device = await createClient(
+      {
+        messageType: 'QUERY',
+        payload: {
+          id: 'CgCGzmhvelv1',
+          on: true,
+          type: 'action.devices.types.OUTLET',
+          // type: 'action.devices.types.PETFEEDER',
+          name: { name: 'td1' }
+        }
+      },
+      (msg) => msg,
+      3000
+    );
   });
 });
