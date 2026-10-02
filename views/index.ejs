@@ -45,7 +45,7 @@
         info.innerHTML = `
       <span>ID: ${device.did}</span>
       <span>Name: ${device.name.name}</span>
-      <span>${device.online ? 'ONLINE' : 'OFFLINE'}</span>
+      <span class="${device.online ? "online" : "offline"}">${device.online ? 'ONLINE' : 'OFFLINE'}</span>
     `;
         item.appendChild(info);
 
@@ -53,33 +53,17 @@
         space.style.height = "100%";
         item.appendChild(space);
 
-        if (true || device.type === 'action.devices.types.OUTLET') {
-            const icon = document.createElement('div');
-            icon.className = `icon ${device.params.on || device.params.isRunning ? '' : 'off'}`;
-            // html icon for a light
-            icon.innerHTML = `
-        <div class="circle">
-          <div class="rays">
-            <div class="r r1"></div>
-            <div class="r r2"></div>
-            <div class="r r3"></div>
-            <div class="r r4"></div>
-            <div class="r r5"></div>
-          </div>
-        </div>
-        <div class="d"></div>
-        <div class="d d1"></div>
-        <div class="d d2"></div>
-        <div class="d d3"></div>
-      `;
-            item.appendChild(icon);
-        }
+        item.appendChild(createIcon(device));
+
+        const buttonsContainer = document.createElement('div');
+        buttonsContainer.className = "buttons-container";
+        item.appendChild(buttonsContainer);
 
         const button = document.createElement('button');
         button.onclick = () => openRemoveDialog(device.did);
         button.innerHTML = `remove`;
         button.className = "removeButton";
-        item.appendChild(button);
+        buttonsContainer.appendChild(button);
 
         if (device.type === 'action.devices.types.CAMERA') {
             const buttonStream = document.createElement('button');
@@ -88,10 +72,27 @@
             };
             buttonStream.innerHTML = `stream`;
             buttonStream.className = "streamButton";
-            item.appendChild(buttonStream);
+            buttonsContainer.appendChild(buttonStream);
         }
 
         itemsList.appendChild(item);
+    }
+
+    function createIcon(device) {
+        const icon = document.createElement('div');
+        icon.className = `icon ${device.params.on || device.params.isRunning ? '' : 'off'}`;
+        // html icon for a light
+        if (device.type === 'action.devices.types.OUTLET') {
+            icon.innerHTML = '<div class="circle"> <div class="rays"> <div class="r r1"></div> <div class="r r2"></div> <div class="r r3"></div> <div class="r r4"></div> <div class="r r5"></div> </div> </div> <div class="d"></div> <div class="d d1"></div> <div class="d d2"></div> <div class="d d3"></div>';
+            icon.className = `icon-light ${device.params.on || device.params.isRunning ? '' : 'off'}`;
+        } else if (device.type === 'action.devices.types.PETFEEDER') {
+            icon.innerHTML = '<div class="icon-feader"><div class="base"></div><div class="finger finger1"></div><div class="finger finger2"></div> <div class="finger finger3"></div> <div class="finger finger4"></div></div>'
+            icon.className = 'icon-feader';
+        } else if (device.type === 'action.devices.types.CAMERA') {
+            icon.innerHTML = '<div class="body"></div><div class="lent"></div>'
+            icon.className = 'icon-camera';
+        }
+        return icon;
     }
 
     function openRemoveDialog(did) {

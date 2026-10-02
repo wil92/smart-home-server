@@ -21,7 +21,6 @@ body {
       display: flex;
       flex-direction: column;
       width: 100vw;
-      height: 100%;
       background: #fff;
       border-radius: 20px 20px 0 0;
       align-items: center; }
@@ -34,26 +33,6 @@ body {
         @media screen and (max-width: 424px) {
           body .page-container .page-body .items-list .item-device {
             width: 100% !important; } }
-        body .page-container .page-body .items-list .removeButton {
-          background: #ff4d4d;
-          color: #fff;
-          border: 0;
-          padding: 5px 10px;
-          font-weight: bold;
-          border-radius: 1px;
-          margin-top: 10px; }
-          body .page-container .page-body .items-list .removeButton:hover {
-            background: #ff0000; }
-        body .page-container .page-body .items-list .streamButton {
-          background: #ff4d4d;
-          color: #fff;
-          border: 0;
-          padding: 5px 10px;
-          font-weight: bold;
-          border-radius: 1px;
-          margin-top: 10px; }
-          body .page-container .page-body .items-list .streamButton:hover {
-            background: #ff0000; }
         body .page-container .page-body .items-list .item-device {
           width: 150px;
           margin: 10px;
@@ -74,6 +53,39 @@ body {
               color: #8479d9;
               font-size: 12px;
               text-align: start; }
+              body .page-container .page-body .items-list .item-device .info span.online {
+                color: #2fff00; }
+              body .page-container .page-body .items-list .item-device .info span.offline {
+                color: #ff4d4d; }
+          body .page-container .page-body .items-list .item-device .buttons-container {
+            display: flex;
+            flex-direction: row;
+            width: 100%;
+            justify-content: center; }
+            body .page-container .page-body .items-list .item-device .buttons-container .removeButton {
+              background: #ff4d4d;
+              color: #fff;
+              border: 0;
+              padding: 5px 10px;
+              font-weight: bold;
+              border-radius: 1px;
+              margin-top: 10px;
+              margin-left: 5px;
+              margin-right: 5px; }
+              body .page-container .page-body .items-list .item-device .buttons-container .removeButton:hover {
+                background: #ff0000; }
+            body .page-container .page-body .items-list .item-device .buttons-container .streamButton {
+              background: #ff4d4d;
+              color: #fff;
+              border: 0;
+              padding: 5px 10px;
+              font-weight: bold;
+              border-radius: 1px;
+              margin-top: 10px;
+              margin-left: 5px;
+              margin-right: 5px; }
+              body .page-container .page-body .items-list .item-device .buttons-container .streamButton:hover {
+                background: #ff0000; }
       body .page-container .page-body h4 {
         color: #8479d9; }
       body .page-container .page-body form {
@@ -149,14 +161,14 @@ body {
 .item-device:hover {
   background: #b0a7c5 !important;
   cursor: pointer; }
-  .item-device:hover .icon .circle {
+  .item-device:hover .icon-light .circle {
     background: #ffce78; }
-    .item-device:hover .icon .circle .rays .r {
+    .item-device:hover .icon-light .circle .rays .r {
       background: #ffce78; }
-  .item-device:hover .icon .d::after {
+  .item-device:hover .icon-light .d::after {
     background: #ffce78; }
 
-.icon {
+.icon-light {
   width: 60px;
   height: 60px;
   min-height: 60px;
@@ -166,13 +178,13 @@ body {
   justify-content: center;
   position: relative;
   margin: 2px; }
-  .icon.off .circle {
+  .icon-light.off .circle {
     background: #6c6c6c; }
-    .icon.off .circle .rays {
+    .icon-light.off .circle .rays {
       display: none; }
-  .icon.off .d::after {
+  .icon-light.off .d::after {
     background: #6c6c6c; }
-  .icon .circle {
+  .icon-light .circle {
     width: 50%;
     height: 50%;
     position: relative;
@@ -183,35 +195,35 @@ body {
     background: #f39c12ff;
     border-radius: 50%;
     z-index: 6; }
-    .icon .circle .rays {
+    .icon-light .circle .rays {
       width: 100%;
       height: 100%;
       display: flex;
       align-items: center;
       justify-content: center; }
-      .icon .circle .rays .r {
+      .icon-light .circle .rays .r {
         width: 23%;
         height: 10%;
         border-radius: 30% / 50%;
         background: #f39c12ff;
         position: absolute; }
-      .icon .circle .rays .r1 {
+      .icon-light .circle .rays .r1 {
         transform: translateX(-330%); }
-      .icon .circle .rays .r2 {
+      .icon-light .circle .rays .r2 {
         transform: rotateZ(45deg) translateX(-330%); }
-      .icon .circle .rays .r3 {
+      .icon-light .circle .rays .r3 {
         transform: rotateZ(90deg) translateX(-330%); }
-      .icon .circle .rays .r4 {
+      .icon-light .circle .rays .r4 {
         transform: rotateZ(135deg) translateX(-330%); }
-      .icon .circle .rays .r5 {
+      .icon-light .circle .rays .r5 {
         transform: rotateZ(180deg) translateX(-330%); }
-    .icon .circle::before {
+    .icon-light .circle::before {
       position: absolute;
       content: '';
       width: 90%;
       height: 90%;
       border-radius: 50%; }
-  .icon .d {
+  .icon-light .d {
     position: relative;
     width: 27.8%;
     height: 11.5%;
@@ -220,27 +232,89 @@ body {
     margin-top: -7%;
     display: flex;
     z-index: 5; }
-    .icon .d::after {
+    .icon-light .d::after {
       content: '';
       width: 100%;
       height: 100%;
       background: #f39c12ff;
       border-radius: 50%;
       margin-top: -5%; }
-  .icon .d1 {
+  .icon-light .d1 {
     width: 24.7%;
     height: 11.5%;
     margin-top: -6%;
     z-index: 4; }
-  .icon .d2 {
+  .icon-light .d2 {
     width: 20.5%;
     height: 8.3%;
     margin-top: -5%;
     z-index: 3; }
-  .icon .d3 {
+  .icon-light .d3 {
     width: 9.6%;
     height: 6.5%;
     margin-top: -4%;
     z-index: 3; }
+
+.icon-feader {
+  width: 60px;
+  height: 60px;
+  position: relative; }
+  .icon-feader .finger {
+    background: #6c6c6c;
+    width: 20%;
+    height: 20%;
+    border-radius: 50%;
+    position: absolute;
+    left: 50%;
+    top: 50%; }
+  .icon-feader .finger1 {
+    transform: translateX(-180%) translateY(-70%); }
+  .icon-feader .finger2 {
+    transform: translateX(-110%) translateY(-150%); }
+  .icon-feader .finger3 {
+    transform: translateX(10%) translateY(-150%); }
+  .icon-feader .finger4 {
+    transform: translateX(80%) translateY(-70%); }
+  .icon-feader .base {
+    position: absolute;
+    background: #6c6c6c;
+    bottom: 15%;
+    left: 50%;
+    transform: translateX(-50%);
+    --r: 8.16px;
+    width: 60%;
+    aspect-ratio: 1/cos(30deg);
+    --_g: calc(tan(60deg) * var(--r)) bottom var(--r), #000 98%, #0000 101%;
+    mask: conic-gradient(from -30deg at 50% calc(200% - 3 * var(--r) / 2), #000 60deg, #0000 0) 0 100%/100% calc(100% - 3 * var(--r) / 2) no-repeat, radial-gradient(var(--r) at 50% calc(2 * var(--r)), #000 98%, #0000 101%), radial-gradient(var(--r) at left var(--_g)), radial-gradient(var(--r) at right var(--_g));
+    clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+
+.icon-camera {
+  --size: 60px;
+  width: var(--size);
+  height: var(--size);
+  min-height: var(--size);
+  position: relative; }
+  .icon-camera .body {
+    width: calc(var(--size) * 0.35);
+    height: calc(var(--size) * 0.4);
+    background: #6c6c6c;
+    border-radius: calc(var(--size) * .05);
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translateX(-90%) translateY(-50%); }
+  .icon-camera .lent {
+    width: calc(var(--size) * 0.3);
+    height: calc(var(--size) * 0.35);
+    background: #6c6c6c;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translateY(-50%);
+    --r: 1.8px;
+    aspect-ratio: cos(30deg);
+    --_g: calc(tan(60deg) * var(--r)) right var(--r), #000 98%, #0000 101%;
+    mask: conic-gradient(from 240deg at calc(200% - 3 * var(--r) / 2), #000 60deg, #0000 0) 100% 0/calc(100% - 3*var(--r)/2) 100% no-repeat, radial-gradient(var(--r) at calc(2 * var(--r)) 50%, #000 98%, #0000 101%), radial-gradient(var(--r) at top var(--_g)), radial-gradient(var(--r) at bottom var(--_g));
+    clip-path: polygon(0 50%, 100% 100%, 100% 0); }
 
 /*# sourceMappingURL=style.css.map */
