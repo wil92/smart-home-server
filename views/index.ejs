@@ -30,6 +30,7 @@
         }).then((res) => {
             return res.json();
         }).then(devices => {
+            devices = [...devices, ...devices];
             const itemsList = document.querySelector('.items-list');
             itemsList.innerHTML = '';
             devices.forEach(device => createHtmlDeviceElement(device, itemsList));
