@@ -11,9 +11,19 @@ import {
   DEVICE_TYPE_OUTLET,
   DEVICE_TYPE_CAMERA,
   COMMAND_GET_CAMERA_STREAM,
-  sanitizeDevice
+  sanitizeDevice,
+  COMMAND_DISPENSE
 } from '../../utils';
 import { IDevice } from '../../models/device';
+import RequestInput from './models/request-input';
+import FulfillmentResponse from './models/fulfillment-response';
+import { QueryDevices } from './models/payload';
+import FulfillmentRequest from './models/fulfillment-request';
+import Device, { Attributes } from './models/device';
+import { TraitType } from './models/trait.type';
+import Command from './models/command';
+import QueryDevice from './models/query-device';
+import { CameraAttributes, FeederAttributes, OutletAttributes } from './models/device-attributes';
 
 const router = express.Router();
 
@@ -72,19 +82,45 @@ router.post('/:lid/off', (req, res) => {
 
 // POST fulfillment request from Google Home.
 router.post('/fulfillment', async (req, res) => {
-  const { requestId, inputs } = req.body;
-  let payload;
+  const { requestId, inputs } = req.body as FulfillmentRequest;
 
   try {
+    let devices: Device[] | QueryDevices | undefined = undefined;
+    let commands: Command[] | undefined = undefined;
     for (let i = 0; i < inputs.length; i++) {
       const action = inputs[i];
-      payload = await handleAction(action);
+
+      if (action.intent === 'action.devices.DISCONNECT') {
+        break;
+      } else if (action.intent === 'action.devices.SYNC') {
+        if (!devices) {
+          devices = [];
+        }
+        devices = [...(devices as Device[]), ...((await handleAction(action)) as Device[])];
+      } else if (action.intent === 'action.devices.EXECUTE') {
+        if (!commands) {
+          commands = [];
+        }
+        commands = [...(commands as Command[]), ...((await handleAction(action)) as Command[])];
+      } else if (action.intent === 'action.devices.QUERY') {
+        if (!devices) {
+          devices = {};
+        }
+        devices = {
+          ...(devices as QueryDevices),
+          ...((await handleAction(action)) as QueryDevices)
+        };
+      }
     }
 
     res.send({
       requestId,
-      payload
-    });
+      payload: {
+        agentUserId: env.googleUserId,
+        devices,
+        commands
+      }
+    } as FulfillmentResponse);
   } catch (error) {
     console.error(error);
     res.status(500);
@@ -92,35 +128,8 @@ router.post('/fulfillment', async (req, res) => {
   }
 });
 
-interface Action {
-  intent:
-    | 'action.devices.DISCONNECT'
-    | 'action.devices.SYNC'
-    | 'action.devices.QUERY'
-    | 'action.devices.EXECUTE';
-  payload: {
-    commands?: {
-      devices: {
-        id: string;
-      }[];
-      execution: {
-        command: string;
-        params: {
-          start?: boolean;
-          on?: boolean;
-          StreamToChromecast?: boolean;
-          SupportedStreamProtocols?: string[];
-        };
-      }[];
-    }[];
-    devices?: {
-      id: string;
-    }[];
-  };
-}
-
-async function handleAction(action: Action) {
-  switch (action['intent']) {
+async function handleAction(action: RequestInput): Promise<Device[] | QueryDevices | Command[]> {
+  switch (action.intent) {
     case 'action.devices.SYNC':
       return await syncAction();
     case 'action.devices.QUERY':
@@ -128,92 +137,94 @@ async function handleAction(action: Action) {
     case 'action.devices.EXECUTE':
       return await executeAction(action);
     case 'action.devices.DISCONNECT':
-      break;
     default:
-      break;
+      throw new Error(`Unsupported intent: ${action.intent}`);
   }
 }
 
-async function syncAction() {
+async function syncAction(): Promise<Device[]> {
   const devices = await models.Device.find();
-  return {
-    agentUserId: env.googleUserId,
-    devices: devices.map((l: any) => {
-      const { ...name } = l.name.toJSON();
-      return {
-        id: l.did,
-        type: l.type,
-        traits: traitsByType(l.type),
-        name,
-        willReportState: willReportStateByType(l.type),
-        attributes: attributesByType(l.type)
-      };
-    })
-  };
+  return devices.map((l: any) => {
+    const { ...name } = l.name.toJSON();
+    return {
+      id: l.did,
+      type: l.type,
+      traits: traitsByType(l.type),
+      name: { name: name.name },
+      willReportState: willReportStateByType(l.type),
+      attributes: attributesByType(l.type)
+    } as Device;
+  });
 }
 
-async function queryAction(action: Action) {
-  const res: { devices: any } = { devices: {} };
-  for (const d of action.payload?.devices || []) {
-    const existDevice = await models.Device.exist(d.id);
+async function queryAction(action: RequestInput): Promise<QueryDevices> {
+  const devices: QueryDevices = {};
+  for (const device of action.payload?.devices || []) {
+    const existDevice = await models.Device.exist(device.id);
     if (existDevice) {
-      let isConnected = webSocket.connectedDevices.has(d.id);
+      let isConnected = webSocket.connectedDevices.has(device.id);
       if (isConnected) {
         try {
-          await webSocket.sendMessageWaitResponse(d.id, {
+          await webSocket.sendMessageWaitResponse(device.id, {
             payload: { messageType: 'QUERY' }
           } as WSMessageResponse);
-        } catch (_err) {
+        } catch (err) {
+          console.error(`Error querying device ${device.id}:`, err);
           isConnected = false;
         }
       }
       if (isConnected) {
-        const de = await models.Device.findOne({ did: d.id });
-        res.devices[d.id] = {
+        const dbDevice = await models.Device.findOne({ did: device.id });
+        devices[device.id] = {
           status: 'SUCCESS',
           online: true,
-          ...(await stateByType(de))
-        };
+          ...(await stateByType(dbDevice))
+        } as QueryDevice;
       } else {
-        res.devices[d.id] = {
+        devices[device.id] = {
           status: 'OFFLINE',
           online: false
-        };
+        } as QueryDevice;
       }
     } else {
-      res.devices[d.id] = {
+      devices[device.id] = {
         status: 'ERROR',
         online: false,
         errorCode: 'Device is not available in the system'
-      };
+      } as QueryDevice;
     }
   }
-  return res;
+  return devices;
 }
 
-async function executeAction(action: Action) {
-  const payload: { commands: any[] } = { commands: [] };
+async function executeAction(action: RequestInput): Promise<Command[]> {
+  const commands: Command[] = [];
   const errors = [];
-  const offlines = [];
+  const offline = [];
   for (const c of action.payload?.commands || []) {
     for (const exe of c.execution) {
-      let commandRes: { ids: string[]; status: string; states?: any; errorCode?: string } = {
+      let commandRes: Command = {
         ids: [],
         status: 'ERROR'
       };
       if (exe.command === COMMAND_ON_OFF) {
-        commandRes = { ids: [], status: 'SUCCESS', states: { on: exe.params.on, online: true } };
-      } else if (exe.command === COMMAND_START_STOP) {
         commandRes = {
           ids: [],
           status: 'SUCCESS',
-          states: { isRunning: exe.params.start, online: true }
-        };
+          states: { on: exe.params.on, online: true }
+        } as Command;
+      } else if (exe.command === COMMAND_START_STOP || exe.command === COMMAND_DISPENSE) {
+        exe.params.start = true;
+        commandRes = {
+          ids: [],
+          status: 'SUCCESS',
+          states: { isRunning: Boolean(exe.params.start), online: true }
+        } as Command;
       } else if (exe.command === COMMAND_GET_CAMERA_STREAM) {
-        commandRes = { ids: [], status: 'SUCCESS', states: { online: true } };
+        commandRes = { ids: [], status: 'SUCCESS', states: { online: true } } as Command;
       } else {
         // toDo guille 16.06.22: not handle commands
-        return;
+        return [];
       }
 
       for (const d of c.devices) {
@@ -238,7 +249,7 @@ async function executeAction(action: Action) {
           if (isConnected) {
             commandRes.ids.push(d.id);
           } else {
-            offlines.push(d);
+            offline.push(d);
           }
         } else {
           errors.push(d);
@@ -246,32 +257,32 @@ async function executeAction(action: Action) {
       }
 
       if (commandRes.ids.length > 0) {
-        payload.commands.push(commandRes);
+        commands.push(commandRes);
       }
     }
   }
 
-  if (offlines.length > 0) {
-    const commandRes: { ids: any[]; status: string; states: { online: boolean } } = {
+  if (offline.length > 0) {
+    const commandRes: Command = {
       ids: [],
       status: 'OFFLINE',
       states: { online: false }
     };
-    offlines.forEach((e: { id: string }) => commandRes.ids.push(e.id));
-    payload.commands.push(commandRes);
+    offline.forEach((e: { id: string }) => commandRes.ids.push(e.id));
+    commands.push(commandRes);
   }
 
   if (errors.length > 0) {
-    const commandRes: { ids: any[]; status: string; errorCode: string } = {
+    const commandRes: Command = {
       ids: [],
       status: 'ERROR',
       errorCode: 'Device is not available in the system'
     };
     errors.forEach((e) => commandRes.ids.push(e.id));
-    payload.commands.push(commandRes);
+    commands.push(commandRes);
   }
 
-  return payload;
+  return commands;
 }
 
 function commandToSendByType(type: string, exe: any): any {
@@ -287,10 +298,10 @@ function commandToSendByType(type: string, exe: any): any {
   }
 }
 
-function traitsByType(type: string): string[] {
+function traitsByType(type: string): TraitType[] {
   switch (type) {
     case DEVICE_TYPE_PETFEEDER:
-      return ['action.devices.traits.StartStop'];
+      return ['action.devices.traits.Dispense', 'action.devices.traits.StartStop'];
     case DEVICE_TYPE_OUTLET:
       return ['action.devices.traits.OnOff'];
     case DEVICE_TYPE_CAMERA:
@@ -300,7 +311,10 @@ function traitsByType(type: string): string[] {
   }
 }
 
-async function stateByType(de: IDevice | any, waitFirstImage: boolean = false) {
+async function stateByType(
+  de: IDevice | any,
+  waitFirstImage: boolean = false
+): Promise<CameraAttributes | FeederAttributes | OutletAttributes> {
   switch (de.type) {
     case DEVICE_TYPE_CAMERA:
       if (waitFirstImage) {
@@ -315,31 +329,59 @@ async function stateByType(de: IDevice | any, waitFirstImage: boolean = false) {
         cameraStreamProtocol: 'hls'
         // cameraStreamAuthToken: 'some-auth-token',
         // cameraStreamReceiverAppId: 'some-app-id',
-      };
+      } as CameraAttributes;
     case DEVICE_TYPE_PETFEEDER:
-      return { isRunning: de.params.isRunning };
+      return {
+        isRunning: de.params.isRunning,
+        dispenseItems: [
+          {
+            itemName: 'aquarium-fish-food',
+            isCurrentlyDispensing: false
+          }
+        ]
+      } as FeederAttributes;
     case DEVICE_TYPE_OUTLET:
-      return { on: de.params.on };
+      return { on: de.params.on } as OutletAttributes;
     default:
-      return {};
+      return {} as QueryDevice;
   }
 }
 
-function attributesByType(type: string): any {
+function attributesByType(type: string): Attributes {
   switch (type) {
     case DEVICE_TYPE_CAMERA:
       return {
         cameraStreamSupportedProtocols: ['hls'],
         cameraStreamNeedAuthToken: false,
         cameraStreamNeedDrmEncryption: false
-      };
+      } as Attributes;
     case DEVICE_TYPE_PETFEEDER:
       return {
-        pausable: false
-      };
+        pausable: false,
+        supportedDispenseItems: [
+          {
+            item_name: 'aquarium-fish-food',
+            item_name_synonyms: [
+              { lang: 'es', synonyms: ['Alimento para peces de acuario'] },
+              { lang: 'en', synonyms: ['Aquarium Fish Food'] }
+            ],
+            supported_units: ['PORTION'],
+            default_portion: { amount: 1, unit: 'PORTION' }
+          }
+        ],
+        supportedDispensePresets: [
+          {
+            preset_name: 'dispense-portion',
+            preset_name_synonyms: [
+              { lang: 'es', synonyms: ['Dispensar una porción'] },
+              { lang: 'en', synonyms: ['Dispense a portion'] }
+            ]
+          }
+        ]
+      } as Attributes;
     case DEVICE_TYPE_OUTLET:
     default:
-      return undefined;
+      return {} as Attributes;
   }
 }
 

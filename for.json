@@ -1,0 +1,43 @@
+{
+  "requestId": "234235234",
+  "payload": {
+    "agentUserId": "K33tB0",
+    "devices": [
+      {
+        "id": "YzK1tVFF7KZraIf0mYJJ",
+        "type": "action.devices.types.OUTLET",
+        "traits": ["action.devices.traits.OnOff"],
+        "name": { "name": "Luz Acuario", "_id": "6ac3822631f38b3f27f8fb8a" },
+        "willReportState": false
+      },
+      {
+        "id": "Wtzmx4dmTFA0ZfHPJecz",
+        "type": "action.devices.types.PETFEEDER",
+        "traits": ["action.devices.traits.StartStop"],
+        "name": { "name": "AquariumFeeder", "_id": "6ac3fce131f38b3f27f95d63" },
+        "willReportState": false,
+        "attributes": { "pausable": false }
+      },
+      {
+        "id": "rpR5Ibs8yYkn8eEQhKVW",
+        "type": "action.devices.types.CAMERA",
+        "traits": ["action.devices.traits.CameraStream"],
+        "name": { "name": "FishCamera", "_id": "6837b545fd77ec6fb80ba47e" },
+        "willReportState": true,
+        "attributes": {
+          "cameraStreamSupportedProtocols": ["hls"],
+          "cameraStreamNeedAuthToken": false,
+          "cameraStreamNeedDrmEncryption": false
+        }
+      },
+      {
+        "id": "muEeFh8thjG1WEQHV5od",
+        "type": "action.devices.types.PETFEEDER",
+        "traits": ["action.devices.traits.StartStop"],
+        "name": { "name": "feader test", "_id": "6ac3f7b931f38b3f27f9573d" },
+        "willReportState": false,
+        "attributes": { "pausable": false }
+      }
+    ]
+  }
+}
