@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 512 512"
+   width="512"
+   height="512"
+   fill="none"
+   stroke="#4fc3f7"
+   stroke-width="26"
+   stroke-linecap="round"
+   stroke-linejoin="round"
+   version="1.1"
+   id="svg4"
+   sodipodi:docname="favicon.svg"
+   inkscape:version="1.4.3 (0d15f75042, 2025-12-25)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs4" />
+  <sodipodi:namedview
+     id="namedview4"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="0.390625"
+     inkscape:cx="-120.32"
+     inkscape:cy="409.6"
+     inkscape:window-width="1920"
+     inkscape:window-height="1011"
+     inkscape:window-x="0"
+     inkscape:window-y="32"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg4" />
+  <!-- house -->
+  <!-- cable -->
+  <!-- plug -->
+  <g
+     id="g4"
+     transform="translate(-14)">
+    <polyline
+       points="50,250 226,80 402,250"
+       transform="translate(10.5,-11.500585)"
+       id="polyline1"
+       style="stroke-width:60;stroke-dasharray:none" />
+    <path
+       id="polyline2"
+       style="stroke-width:60"
+       d="m 110.5,190.20396 v 212.29545 h 71.89807"
+       sodipodi:nodetypes="ccc" />
+    <path
+       id="polyline3"
+       style="stroke-width:60"
+       d="M 362.5,190.20396 V 402.49941 H 292.41213"
+       sodipodi:nodetypes="ccc" />
+    <circle
+       cx="236.5"
+       cy="288.49942"
+       r="38.406258"
+       fill="#4fc3f7"
+       id="circle3" />
+    <path
+       d="m 236.5,288.49941 v 172 h 182 c 33.33333,0 50,-16.66667 50,-50 v -17"
+       id="path3"
+       sodipodi:nodetypes="ccssc" />
+    <rect
+       x="436.5"
+       y="328.49942"
+       width="60"
+       height="65"
+       rx="12"
+       fill="#4fc3f7"
+       id="rect3" />
+    <line
+       x1="452.5"
+       y1="288.49942"
+       x2="452.5"
+       y2="328.49942"
+       id="line3" />
+    <line
+       x1="480.5"
+       y1="288.49942"
+       x2="480.5"
+       y2="328.49942"
+       id="line4" />
+  </g>
+</svg>
