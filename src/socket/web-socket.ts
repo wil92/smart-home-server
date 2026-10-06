@@ -168,16 +168,6 @@ const wepSocketInstance = {
           if (new Date().getTime() - ws.lastFrame > 3000) {
             ws.isStreaming = false;
           }
-          if (new Date().getTime() - ws.lastRequest > 10000) {
-            wepSocketInstance.sendMessage(ws.lid, {
-              payload: {
-                messageType: 'EXECUTE',
-                command: {
-                  on: false
-                }
-              }
-            } as WSMessageResponse);
-          }
         }
 
         ws.isAlive = false;
